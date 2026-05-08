@@ -11,10 +11,10 @@ const SpotItApp = (() => {
     randomSize: false,
     sizeMin: 0.6,
     sizeMax: 1.4,
-    randomAngle: false,
+    randomAngle: true,
     maxAngle: 45,
     pageSize: 'a4',
-    cardsPerRow: 3,
+    cardsPerRow: 1,
     margin: 15,
     bleedMarks: false,
     seed: Date.now(),
@@ -169,7 +169,7 @@ const SpotItApp = (() => {
     };
 
     // Only show a preview subset for large decks
-    const maxPreview = 3;
+    const maxPreview = 1;
     const previewCount = Math.min(deck.cards.length, maxPreview);
 
     for (let i = 0; i < deck.cards.length; i++) {

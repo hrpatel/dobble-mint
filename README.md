@@ -2,7 +2,7 @@
 
 A premium single-page application for generating custom **Spot It** (also known as **Dobble**) game cards. Built with pure mathematics and modern web technologies.
 
-![Spot It Preview](https://via.placeholder.com/800x400?text=Dobble+Mint+Preview) <!-- Replace with actual screenshot if available -->
+![alt text](/media/preview.png)
 
 ## 🧬 The Mathematics
 

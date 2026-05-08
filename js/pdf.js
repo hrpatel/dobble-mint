@@ -49,7 +49,7 @@ const SpotItPDF = (() => {
   async function generatePDF(cardSvgs, options = {}) {
     const {
       pageSize = 'a4',
-      cardsPerRow = 3,
+      cardsPerRow = 1,
       margin = 5, // mm
       bleedMarks = true,
     } = options;
