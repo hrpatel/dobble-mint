@@ -185,14 +185,16 @@ const SpotItRenderer = (() => {
       if (!pos) continue;
 
       let finalSize = pos.baseSize;
+      const sizeRand = prng();
       if (randomSize && sizeRange && sizeRange.length === 2) {
-        const factor = sizeRange[0] + prng() * (sizeRange[1] - sizeRange[0]);
+        const factor = sizeRange[0] + sizeRand * (sizeRange[1] - sizeRange[0]);
         finalSize *= factor;
       }
 
+      const angleRand = prng();
       let angle = 0;
       if (randomAngle) {
-        angle = (prng() - 0.5) * 2 * maxAngle;
+        angle = (angleRand - 0.5) * 2 * maxAngle;
       }
 
       // Use a group for rotation/scaling for better browser compatibility

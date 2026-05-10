@@ -9,14 +9,13 @@ const SpotItApp = (() => {
     shape: 'circle',
     layout: 'ring',
     randomSize: false,
-    sizeMin: 0.6,
-    sizeMax: 1.4,
+    sizeVariance: 20,
     randomAngle: true,
     maxAngle: 45,
-    pageSize: 'a4',
-    cardsPerRow: 1,
+    pageSize: 'letter',
+    cardsPerRow: 3,
     margin: 15,
-    bleedMarks: false,
+    bleedMarks: true,
     seed: Date.now(),
   };
 
@@ -66,10 +65,8 @@ const SpotItApp = (() => {
 
     // Random size
     const sizeToggle = document.getElementById('random-size');
-    const sizeMinInput = document.getElementById('size-min');
-    const sizeMaxInput = document.getElementById('size-max');
-    const sizeMinVal = document.getElementById('size-min-val');
-    const sizeMaxVal = document.getElementById('size-max-val');
+    const sizeVarianceInput = document.getElementById('size-variance');
+    const sizeVarianceVal = document.getElementById('size-variance-val');
 
     sizeToggle.addEventListener('change', e => {
       state.randomSize = e.target.checked;
@@ -78,14 +75,9 @@ const SpotItApp = (() => {
       if (group) group.classList.toggle('hidden', !state.randomSize);
       scheduleUpdate();
     });
-    sizeMinInput.addEventListener('input', e => {
-      state.sizeMin = +e.target.value;
-      if (sizeMinVal) sizeMinVal.textContent = state.sizeMin.toFixed(1);
-      scheduleUpdate();
-    });
-    sizeMaxInput.addEventListener('input', e => {
-      state.sizeMax = +e.target.value;
-      if (sizeMaxVal) sizeMaxVal.textContent = state.sizeMax.toFixed(1);
+    sizeVarianceInput.addEventListener('input', e => {
+      state.sizeVariance = +e.target.value;
+      if (sizeVarianceVal) sizeVarianceVal.textContent = state.sizeVariance;
       scheduleUpdate();
     });
 
@@ -120,6 +112,11 @@ const SpotItApp = (() => {
 
     // Generate PDF
     document.getElementById('generate-pdf-btn').addEventListener('click', handleGeneratePDF);
+
+    // Responsive redraw
+    window.addEventListener('resize', () => {
+      scheduleUpdate();
+    });
   }
 
   function scheduleUpdate() {
@@ -163,13 +160,13 @@ const SpotItApp = (() => {
       shape: state.shape,
       layout: state.layout,
       randomSize: state.randomSize,
-      sizeRange: [state.sizeMin, state.sizeMax],
+      sizeRange: [1.0 - (state.sizeVariance / 100), 1.0 + (state.sizeVariance / 100)],
       randomAngle: state.randomAngle,
       maxAngle: state.maxAngle,
     };
 
     // Only show a preview subset for large decks
-    const maxPreview = 1;
+    const maxPreview = window.innerWidth <= 768 ? 1 : 4;
     const previewCount = Math.min(deck.cards.length, maxPreview);
 
     for (let i = 0; i < deck.cards.length; i++) {
@@ -185,21 +182,13 @@ const SpotItApp = (() => {
 
         const label = document.createElement('span');
         label.className = 'card-label';
-        label.textContent = `#${i + 1}`;
+        label.textContent = `#${i + 1} of ${deck.cards.length}`;
         wrapper.appendChild(label);
 
         grid.appendChild(wrapper);
       }
     }
 
-    // Show "and N more" if truncated
-    const moreIndicator = document.getElementById('more-cards');
-    if (deck.cards.length > maxPreview) {
-      moreIndicator.textContent = `… and ${deck.cards.length - maxPreview} more cards in PDF`;
-      moreIndicator.classList.remove('hidden');
-    } else {
-      moreIndicator.classList.add('hidden');
-    }
   }
 
   async function handleGeneratePDF() {

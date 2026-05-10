@@ -376,6 +376,12 @@ input[type="range"]::-webkit-slider-thumb {
   flex-direction: column;
 }
 
+.top-panels {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
 .main-header {
   display: flex;
   align-items: center;
@@ -392,7 +398,7 @@ input[type="range"]::-webkit-slider-thumb {
 /* ---------- Card grid ---------- */
 #card-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
   grid-auto-rows: 1fr;
   gap: 32px;
   flex: 1;
@@ -457,13 +463,18 @@ input[type="range"]::-webkit-slider-thumb {
 @media (max-width: 768px) {
   .app { flex-direction: column; }
   .sidebar {
+    order: 2;
     width: 100%;
     min-width: unset;
     height: auto;
     position: relative;
     border-right: none;
-    border-bottom: 1px solid var(--border-glass);
+    border-bottom: none;
+    border-top: 1px solid var(--border-glass);
   }
-  .main { padding: 20px; }
-  #card-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .main { order: 1; padding: 20px; }
+  .top-panels { order: 3; flex-direction: column; margin-top: 24px; margin-bottom: 0; }
+  .main-header { order: 1; }
+  #card-grid { grid-template-columns: 1fr; gap: 12px; order: 2; }
+  #more-cards { order: 4; }
 }

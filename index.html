@@ -1,62 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Generate custom Spot It / Dobble game cards with configurable symbols, shapes, layouts, and export to PDF.">
+  <meta name="description"
+    content="Generate custom Spot It / Dobble game cards with configurable symbols, shapes, layouts, and export to PDF.">
   <title>Dobble Mint — Spot It Card Generator</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
+
 <body>
   <div class="app">
     <!-- ===== SIDEBAR ===== -->
     <aside class="sidebar" id="sidebar">
-      <div class="sidebar-header">
-        <h1>⊙ Dobble Mint</h1>
-        <p>Finite projective plane card builder</p>
-      </div>
-
       <!-- Error -->
       <div id="error-msg" class="error-msg hidden"></div>
 
-      <!-- Stats -->
-      <div class="section">
-        <div class="section-title">Deck Statistics</div>
-        <div class="stats-row">
-          <div class="stat-box">
-            <span class="value" id="stat-cards">—</span>
-            <span class="label">Cards</span>
-          </div>
-          <div class="stat-box">
-            <span class="value" id="stat-symbols">—</span>
-            <span class="label">Symbols</span>
-          </div>
-          <div class="stat-box">
-            <span class="value" id="stat-per-card">—</span>
-            <span class="label">Per Card</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Deck settings -->
-      <div class="section">
-        <div class="section-title">Deck</div>
-        <div class="control-group">
-          <label for="order-select">Projective Plane Order</label>
-          <select id="order-select"></select>
-        </div>
-      </div>
-
       <!-- Symbols -->
       <div class="section">
-        <div class="section-title">Symbols</div>
-        <div class="control-group">
-          <label for="theme-select">Symbol Theme</label>
-          <select id="theme-select"></select>
+        <div class="section-title">Symbol Theme</div>
+        <div class="control-group" style="margin-bottom: 0;">
+          <div style="display: flex; gap: 8px;">
+            <select id="theme-select" style="flex: 1;"></select>
+            <button class="btn btn-secondary" id="shuffle-btn"
+              style="padding: 8px 12px; width: auto; font-size: 0.8rem;" title="Shuffle Symbols">
+              🔀 Shuffle
+            </button>
+          </div>
         </div>
-        <button class="btn btn-secondary" id="shuffle-btn" style="margin-top: 10px;">
-          🔀 Shuffle Symbols
-        </button>
       </div>
 
       <!-- Card shape -->
@@ -64,16 +36,16 @@
         <div class="section-title">Card Shape</div>
         <div class="toggle-group">
           <input type="radio" name="shape" id="shape-circle" value="circle" checked>
-          <label class="toggle-btn" for="shape-circle">⬤ Circle</label>
+          <label class="toggle-btn" for="shape-circle">Circle</label>
 
           <input type="radio" name="shape" id="shape-square" value="square">
-          <label class="toggle-btn" for="shape-square">⬜ Square</label>
+          <label class="toggle-btn" for="shape-square">Square</label>
 
           <input type="radio" name="shape" id="shape-hexagon" value="hexagon">
-          <label class="toggle-btn" for="shape-hexagon">⬡ Hexagon</label>
+          <label class="toggle-btn" for="shape-hexagon">Hexagon</label>
 
           <input type="radio" name="shape" id="shape-octagon" value="octagon">
-          <label class="toggle-btn" for="shape-octagon">⯃ Octagon</label>
+          <label class="toggle-btn" for="shape-octagon">Octagon</label>
         </div>
       </div>
 
@@ -91,40 +63,42 @@
           <label class="toggle-btn" for="layout-random">✦ Random</label>
         </div>
 
-        <!-- Random size -->
-        <div class="switch-row">
-          <span>Random sizing</span>
-          <label class="switch">
-            <input type="checkbox" id="random-size">
-            <span class="slider"></span>
-          </label>
-        </div>
-        <div id="size-range-group" class="hidden">
-          <div class="control-group">
-            <label>Min scale</label>
-            <input type="range" id="size-min" min="0.3" max="1.0" step="0.1" value="0.6">
-            <div class="range-label"><span id="size-min-val">0.6</span><span>1.0</span></div>
+        <!-- Random size and angle toggles -->
+        <div style="display: flex; gap: 16px;">
+          <!-- Size Column -->
+          <div style="flex: 1; display: flex; flex-direction: column;">
+            <div class="switch-row" style="margin: 0 0 12px 0;">
+              <span>Size</span>
+              <label class="switch">
+                <input type="checkbox" id="random-size">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div id="size-range-group" class="hidden">
+              <div class="control-group">
+                <label>Variance</label>
+                <input type="range" id="size-variance" min="0" max="20" step="1" value="20">
+                <div class="range-label"><span>0</span><span id="size-variance-val">20</span></div>
+              </div>
+            </div>
           </div>
-          <div class="control-group">
-            <label>Max scale</label>
-            <input type="range" id="size-max" min="1.0" max="2.0" step="0.1" value="1.4">
-            <div class="range-label"><span>1.0</span><span id="size-max-val">1.4</span></div>
-          </div>
-        </div>
 
-        <!-- Random angle -->
-        <div class="switch-row" style="margin-top: 8px;">
-          <span>Random rotation</span>
-          <label class="switch">
-            <input type="checkbox" id="random-angle">
-            <span class="slider"></span>
-          </label>
-        </div>
-        <div id="angle-range-group" class="hidden">
-          <div class="control-group">
-            <label>Max angle</label>
-            <input type="range" id="max-angle" min="5" max="180" step="5" value="45">
-            <div class="range-label"><span>5°</span><span id="max-angle-val">45°</span></div>
+          <!-- Rotation Column -->
+          <div style="flex: 1; display: flex; flex-direction: column;">
+            <div class="switch-row" style="margin: 0 0 12px 0;">
+              <span>Rotation</span>
+              <label class="switch">
+                <input type="checkbox" id="random-angle">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div id="angle-range-group" class="hidden">
+              <div class="control-group">
+                <label>Max angle</label>
+                <input type="range" id="max-angle" min="5" max="180" step="5" value="45">
+                <div class="range-label"><span>5°</span><span id="max-angle-val">45°</span></div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -132,27 +106,29 @@
       <!-- Export -->
       <div class="section">
         <div class="section-title">Export</div>
-        <div class="control-group">
-          <label for="page-size">Page size</label>
-          <select id="page-size">
-            <option value="a4" selected>A4</option>
-            <option value="letter">US Letter</option>
-          </select>
-        </div>
-        <div class="control-group">
-          <label for="cards-per-row">Cards per row</label>
-          <select id="cards-per-row">
-            <option value="2">2</option>
-            <option value="3" selected>3</option>
-            <option value="4">4</option>
-          </select>
+        <div style="display: flex; gap: 12px;">
+          <div class="control-group" style="flex: 1;">
+            <label for="page-size">Page size</label>
+            <select id="page-size">
+              <option value="a4">A4</option>
+              <option value="letter" selected>US Letter</option>
+            </select>
+          </div>
+          <div class="control-group" style="flex: 1;">
+            <label for="cards-per-row">Cards per row</label>
+            <select id="cards-per-row">
+              <option value="2">2</option>
+              <option value="3" selected>3</option>
+              <option value="4">4</option>
+            </select>
+          </div>
         </div>
         <div class="switch-row" style="margin-top: 8px;">
           <span>Bleed marks</span>
-          <div class="switch">
-            <input type="checkbox" id="bleed-marks">
+          <label class="switch">
+            <input type="checkbox" id="bleed-marks" checked>
             <span class="slider"></span>
-          </div>
+          </label>
         </div>
         <button class="btn btn-primary" id="generate-pdf-btn" style="margin-top: 14px;">
           📄 Download PDF
@@ -162,11 +138,45 @@
 
     <!-- ===== MAIN ===== -->
     <main class="main">
+      <div class="sidebar-header"
+        style="text-align: left; padding-bottom: 0; margin-bottom: 24px; border-bottom: none;">
+        <h1 style="font-size: 2rem;">⊙ Dobble Mint</h1>
+        <p>Finite projective plane card builder</p>
+      </div>
+      <div class="top-panels">
+        <!-- Stats -->
+        <div class="section" style="flex: 1;">
+          <div class="section-title">Deck Statistics</div>
+          <div class="stats-row">
+            <div class="stat-box">
+              <span class="value" id="stat-cards">—</span>
+              <span class="label">Cards</span>
+            </div>
+            <div class="stat-box">
+              <span class="value" id="stat-symbols">—</span>
+              <span class="label">Symbols</span>
+            </div>
+            <div class="stat-box">
+              <span class="value" id="stat-per-card">—</span>
+              <span class="label">Per Card</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Deck settings -->
+        <div class="section" style="flex: 1;">
+          <div class="section-title">Deck</div>
+          <div class="control-group">
+            <label for="order-select">Projective Plane Order</label>
+            <select id="order-select"></select>
+          </div>
+        </div>
+      </div>
+
       <div class="main-header">
         <h2>Card Preview</h2>
       </div>
       <div id="card-grid"></div>
-      <div id="more-cards" class="hidden"></div>
     </main>
   </div>
 
@@ -181,4 +191,5 @@
   <script src="js/pdf.js"></script>
   <script src="js/app.js"></script>
 </body>
+
 </html>
