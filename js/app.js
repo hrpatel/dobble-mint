@@ -5,16 +5,16 @@
 const SpotItApp = (() => {
   let state = {
     order: 7,
-    theme: 'mixed',
+    theme: 'animals',
     shape: 'circle',
     layout: 'ring',
     randomSize: false,
-    sizeVariance: 20,
-    randomAngle: true,
-    maxAngle: 45,
+    sizeVariance: 25,
+    randomAngle: false,
+    maxAngle: 180,
     pageSize: 'letter',
     cardsPerRow: 3,
-    margin: 15,
+    margin: 5,
     bleedMarks: true,
     seed: Date.now(),
   };
@@ -141,14 +141,7 @@ const SpotItApp = (() => {
     }
 
     clearError();
-    updateStats(deck);
     renderAllCards(deck, symbols, prng);
-  }
-
-  function updateStats(deck) {
-    document.getElementById('stat-cards').textContent = deck.numCards;
-    document.getElementById('stat-symbols').textContent = deck.numSymbols;
-    document.getElementById('stat-per-card').textContent = deck.symbolsPerCard;
   }
 
   function renderAllCards(deck, symbols, prng) {
@@ -165,8 +158,22 @@ const SpotItApp = (() => {
       maxAngle: state.maxAngle,
     };
 
-    // Only show a preview subset for large decks
-    const maxPreview = window.innerWidth <= 768 ? 1 : 4;
+    // Dynamically calculate how many cards to preview to perfectly fill the available space
+    let maxPreview = 1;
+    if (window.innerWidth > 1024) {
+      // 1. Calculate columns based on CSS grid min-width (280px) and gap (24px)
+      const mainWidth = window.innerWidth - 388; // Sidebar 340 + padding 48
+      const columns = Math.max(1, Math.floor((mainWidth + 24) / 304));
+      
+      // 2. CSS Grid uses '1fr', so cards stretch to fill the row. Calculate their actual stretched size.
+      const actualCardSize = (mainWidth - ((columns - 1) * 24)) / columns;
+      
+      // 3. Calculate rows using the actual stretched card height (plus some buffer for the footer)
+      const mainHeight = window.innerHeight - 120;
+      const rows = Math.max(1, Math.floor((mainHeight + 24) / (actualCardSize + 24)));
+      
+      maxPreview = columns * rows;
+    }
     const previewCount = Math.min(deck.cards.length, maxPreview);
 
     for (let i = 0; i < deck.cards.length; i++) {

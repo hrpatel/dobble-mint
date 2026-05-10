@@ -28,10 +28,12 @@ const SpotItPDF = (() => {
         canvas.width = w * RASTER_SCALE;
         canvas.height = h * RASTER_SCALE;
         const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.scale(RASTER_SCALE, RASTER_SCALE);
         ctx.drawImage(img, 0, 0, w, h);
         URL.revokeObjectURL(url);
-        resolve(canvas.toDataURL('image/png'));
+        resolve(canvas.toDataURL('image/jpeg', 0.8));
       };
       img.onerror = (e) => {
         URL.revokeObjectURL(url);
@@ -65,7 +67,16 @@ const SpotItPDF = (() => {
     const usableW = pageW - margin * 2;
     const usableH = pageH - margin * 2;
 
-    const cardMM = Math.floor(usableW / cardsPerRow);
+    let cardMM = Math.floor(usableW / cardsPerRow);
+    
+    // Smart fit: if shrinking the card by just 1mm allows us to fit a whole extra row, do it!
+    // (e.g. 68mm fits 3.96 rows. 67mm fits 4.02 rows -> gains 3 whole cards per page!)
+    if (Math.floor(usableH / (cardMM - 1)) > Math.floor(usableH / cardMM)) {
+      cardMM -= 1;
+    } else if (Math.floor(usableH / (cardMM - 2)) > Math.floor(usableH / cardMM)) {
+      cardMM -= 2;
+    }
+
     const cardsPerCol = Math.floor(usableH / cardMM);
     const cardsPerPage = cardsPerRow * cardsPerCol;
 
@@ -89,7 +100,7 @@ const SpotItPDF = (() => {
       const x = margin + col * cardMM + (cardMM - cardDrawSize) / 2;
       const y = margin + row * cardMM + (cardMM - cardDrawSize) / 2;
 
-      doc.addImage(images[i], 'PNG', x, y, cardDrawSize, cardDrawSize);
+      doc.addImage(images[i], 'JPEG', x, y, cardDrawSize, cardDrawSize, undefined, 'FAST');
 
       // Optional bleed marks
       if (bleedMarks) {

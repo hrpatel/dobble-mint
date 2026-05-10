@@ -75,18 +75,34 @@ const SpotItRenderer = (() => {
   }
 
   /** Grid layout: place symbols in a centered grid */
-  function layoutGrid(count) {
+  function layoutGrid(count, shape) {
     const cols = Math.ceil(Math.sqrt(count));
     const rows = Math.ceil(count / cols);
-    const cellW = (RADIUS * 1.6) / cols;
-    const cellH = (RADIUS * 1.6) / rows;
-    const startX = CENTER - (cols * cellW) / 2 + cellW / 2;
-    const startY = CENTER - (rows * cellH) / 2 + cellH / 2;
+    
+    // For squares, we can use the full RADIUS*2. For circles/polygons, use inscribed square.
+    const usableSize = (shape === 'square') ? RADIUS * 2 : RADIUS * 1.414;
+    
+    // gapRatio is the margin between symbols as a fraction of the symbol size.
+    // Also use this gap for the outer border.
+    const gapRatio = 0.35; 
+    const symbolW = usableSize / (cols + (cols + 1) * gapRatio);
+    const symbolH = usableSize / (rows + (rows + 1) * gapRatio);
+    
+    const baseSize = Math.min(symbolW, symbolH);
+    
+    const totalW = cols * baseSize + (cols - 1) * (baseSize * gapRatio);
+    const totalH = rows * baseSize + (rows - 1) * (baseSize * gapRatio);
+    
+    const startX = CENTER - totalW / 2 + baseSize / 2;
+    const startY = CENTER - totalH / 2 + baseSize / 2;
+    
     const positions = [];
     for (let i = 0; i < count; i++) {
       const col = i % cols;
       const row = Math.floor(i / cols);
-      positions.push({ x: startX + col * cellW, y: startY + row * cellH, baseSize: Math.min(cellW, cellH) * 0.7 });
+      const x = startX + col * (baseSize * (1 + gapRatio));
+      const y = startY + row * (baseSize * (1 + gapRatio));
+      positions.push({ x, y, baseSize });
     }
     return positions;
   }
@@ -95,9 +111,32 @@ const SpotItRenderer = (() => {
   function layoutRing(count) {
     const positions = [];
     if (count === 0) return positions;
-    const innerR = RADIUS * 0.55;
-    const centerSize = RADIUS * 0.45;
-    const ringSize = RADIUS * 0.32;
+    if (count === 1) {
+      positions.push({ x: CENTER, y: CENTER, baseSize: RADIUS * 0.8 });
+      return positions;
+    }
+    if (count <= 3) {
+      // For count 2 or 3, a pure ring looks better (line or triangle) than a center point
+      const innerR = RADIUS * 0.45; 
+      const ringSize = RADIUS * 0.5;
+      for (let i = 0; i < count; i++) {
+        const angle = (Math.PI * 2 * i) / count - Math.PI / 2;
+        positions.push({
+          x: CENTER + innerR * Math.cos(angle),
+          y: CENTER + innerR * Math.sin(angle),
+          baseSize: ringSize,
+        });
+      }
+      return positions;
+    }
+    
+    // For count > 3, use center + ring
+    const innerR = RADIUS * 0.6;
+    const centerSize = RADIUS * 0.4;
+    
+    const availableArc = (2 * Math.PI * innerR) / (count - 1);
+    const ringSize = Math.min(RADIUS * 0.4, availableArc * 0.75);
+
     // center symbol
     positions.push({ x: CENTER, y: CENTER, baseSize: centerSize });
     // ring symbols
@@ -115,28 +154,44 @@ const SpotItRenderer = (() => {
   /** Random layout: Poisson-disk-ish via rejection sampling */
   function layoutRandom(count, prng) {
     const positions = [];
-    const minDist = RADIUS * 0.35;
-    const baseSize = RADIUS * 0.35;
-    const maxAttempts = 500;
+    if (count === 0) return positions;
+
+    // Dynamically calculate size based on how many we need to fit
+    const baseSize = Math.min(RADIUS * 0.6, (RADIUS * 1.3) / Math.sqrt(count));
+    const minDist = baseSize * 1.25; // 25% gap between symbol centers
+    
+    // Max distance from center to ensure symbol doesn't touch border (5% padding)
+    const maxDist = Math.max(0, RADIUS * 0.95 - baseSize / 2);
 
     for (let i = 0; i < count; i++) {
       let placed = false;
-      for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      let currentMinDist = minDist;
+      
+      for (let attempt = 0; attempt < 800; attempt++) {
+        // If struggling to find space, slowly reduce the required distance to force placement
+        if (attempt > 400) {
+          currentMinDist *= 0.98; 
+        }
+        
+        // Use sqrt(prng) for uniform area distribution in the circle
         const angle = prng() * Math.PI * 2;
-        const dist = prng() * (RADIUS * 0.75);
+        const dist = Math.sqrt(prng()) * maxDist; 
         const x = CENTER + dist * Math.cos(angle);
         const y = CENTER + dist * Math.sin(angle);
+        
         let ok = true;
         for (const p of positions) {
           const dx = p.x - x, dy = p.y - y;
-          if (Math.sqrt(dx * dx + dy * dy) < minDist) { ok = false; break; }
+          if (Math.sqrt(dx * dx + dy * dy) < currentMinDist) { ok = false; break; }
         }
+        
         if (ok) { positions.push({ x, y, baseSize }); placed = true; break; }
       }
+      
       if (!placed) {
-        // fallback: just place it
+        // Ultimate fallback
         const angle = prng() * Math.PI * 2;
-        const dist = prng() * (RADIUS * 0.6);
+        const dist = Math.sqrt(prng()) * maxDist;
         positions.push({ x: CENTER + dist * Math.cos(angle), y: CENTER + dist * Math.sin(angle), baseSize });
       }
     }
@@ -174,7 +229,7 @@ const SpotItRenderer = (() => {
     // Layout positions
     let positions;
     switch (layout) {
-      case 'grid': positions = layoutGrid(symbols.length); break;
+      case 'grid': positions = layoutGrid(symbols.length, shape); break;
       case 'random': positions = layoutRandom(symbols.length, prng); break;
       case 'ring': default: positions = layoutRing(symbols.length); break;
     }
