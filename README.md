@@ -27,9 +27,9 @@ This generator currently supports prime orders $n \in \{2, 3, 5, 7, 11, 13\}$.
   - **Grid:** Orderly placement for clarity.
   - **Random:** Poisson-disk sampling for a more organic feel.
 - **Deep Customization:**
-  - Toggle random symbol sizing.
-  - Toggle random symbol rotation.
-- **Vector PDF Export:** High-quality, print-ready PDF generation with optional bleed marks.
+  - Dynamic size variance sliders to normalize scaling.
+  - Granular symbol rotation bounds.
+- **High-Quality PDF Export:** Hardware-accelerated canvas rasterization generates incredibly crisp, print-ready PDFs (with optional bleed marks) while perfectly preserving complex system emojis without bloating file sizes.
 
 ## 🚀 Getting Started
 
@@ -37,8 +37,8 @@ Simply open `index.html` in any modern web browser. No server or installation re
 
 ### Local Development
 The project is built with:
-- **Core:** HTML5, CSS3 (Glassmorphism), Vanilla JavaScript.
-- **PDF Engine:** [jsPDF](https://github.com/parallax/jsPDF) + [svg2pdf.js](https://github.com/yWorks/svg2pdf.js).
+- **Core:** HTML5, CSS3, Vanilla JavaScript.
+- **PDF Engine:** [jsPDF](https://github.com/parallax/jsPDF) (using high-fidelity canvas rasterization).
 - **Fonts:** Inter (via Google Fonts).
 
 ## 🛠️ Project Structure
@@ -47,7 +47,7 @@ The project is built with:
 dobble-mint/
 ├── index.html       # Main application shell
 ├── css/
-│   └── style.css    # Dark glassmorphism design system
+│   └── style.css    # Solarized Dark design system
 └── js/
     ├── math.js      # Projective plane construction engine
     ├── symbols.js   # Unicode/Emoji pool management
