@@ -72,7 +72,7 @@ const SpotItPlay = (() => {
       $('mode-note').textContent = '2 Players needs a touch screen: a phone or tablet laid flat.';
     }
 
-    for (const id of ['play-brand-link', 'edit-link']) {
+    for (const id of ['play-brand-link', 'edit-link', 'play-back-btn']) {
       $(id).addEventListener('click', e => { e.preventDefault(); host.exit(); });
     }
     $('start-btn').addEventListener('click', startGame);

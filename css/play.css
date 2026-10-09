@@ -10,24 +10,32 @@ body.playing {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 20px;
 }
 
-.start-header {
+/* Same .topbar as the designer so the logo stays put when switching views */
+.play-topbar {
   width: 100%;
-  max-width: 960px;
-  display: flex;
-  align-items: center;
+  height: var(--topbar-h);
 }
 
-.start-header .brand {
-  width: auto;
-  color: inherit;
-  text-decoration: none;
+/* Out of flow so the button never changes the bar's height (and the logo's position) */
+.play-back {
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.play-back:hover {
+  transform: translateY(calc(-50% - 1px));
+}
+
+.play-back:active {
+  transform: translateY(calc(-50% + 1px));
 }
 
 .start-panel {
-  width: min(400px, 100%);
+  width: min(400px, 100% - 40px);
   margin: auto 0;
   padding: 32px 28px;
   display: flex;
@@ -352,6 +360,16 @@ body.playing {
 @keyframes penalty {
   0% { opacity: 1; transform: translateY(0); }
   100% { opacity: 0; transform: translateY(-14px); }
+}
+
+@media (max-width: 900px) {
+  .play-topbar {
+    height: auto;
+  }
+
+  .play-back {
+    right: 16px;
+  }
 }
 
 /* Solo side by side when play.js finds that gives bigger cards (wide screens) */
