@@ -31,12 +31,21 @@ This generator currently supports prime orders $n \in \{2, 3, 5, 7, 11, 13\}$.
   - Editable seed for reproducible decks.
 - **Shareable Links:** Every setting and the seed live in the URL, so a link recreates the exact deck.
 - **Find the Match:** Click any two cards to highlight the symbol they share.
+- **Play the Game:** "The Tower" with your deck: a solo time trial with best times, or two players
+  head to head on one phone or tablet laid flat.
 - **Light and Dark Modes:** Follows your system setting, with a manual toggle.
 - **High-Quality PDF Export:** Hardware-accelerated canvas rasterization generates incredibly crisp, print-ready PDFs (with optional bleed marks) while perfectly preserving complex system emojis without bloating file sizes.
 
 ## 🚀 Getting Started
 
-Simply open `index.html` in any modern web browser. No server or installation required!
+Simply open `index.html` in any modern web browser, or use the hosted version at
+https://hrpatel.github.io/dobble-mint/. No server or installation required!
+
+Run the unit tests with Node (no install needed):
+
+```sh
+node --test "tests/*.test.js"
+```
 
 ### Local Development
 The project is built with:
@@ -48,15 +57,20 @@ The project is built with:
 
 ```text
 dobble-mint/
-├── index.html       # Main application shell
+├── index.html       # Single page: deck designer + game
 ├── css/
-│   └── style.css    # Tabletop design system (light + dark)
-└── js/
-    ├── math.js      # Projective plane construction engine
-    ├── symbols.js   # Unicode/Emoji pool management
-    ├── renderer.js  # SVG card rendering logic
-    ├── pdf.js       # PDF assembly and export
-    └── app.js       # UI orchestration & state management
+│   ├── style.css    # Tabletop design system (light + dark)
+│   └── play.css     # Game layout
+├── js/
+│   ├── math.js      # Projective plane construction engine
+│   ├── symbols.js   # Unicode/Emoji pool management
+│   ├── renderer.js  # SVG card rendering logic
+│   ├── deck.js      # Shared deck settings, URL format, and deck building
+│   ├── pdf.js       # PDF assembly and export
+│   ├── app.js       # Designer UI and state
+│   ├── game.js      # Game rules (no DOM)
+│   └── play.js      # Game view UI
+└── tests/           # Node unit tests (node --test)
 ```
 
 ## 📝 License
