@@ -65,10 +65,9 @@ when changing the renderer.
 
 ## Styling
 
-`css/style.css` uses a "tabletop" design with light and dark tokens on `:root` and
-`:root[data-theme="dark"]`. An inline script in `index.html` sets `data-theme` before first
-paint from `localStorage` (`dm-theme`) or `prefers-color-scheme`. Fonts: Inter
-(`--font-sans`) for controls, Newsreader (`--font-serif`) for brand, section titles, and card
-numbers.
+`css/style.css` uses a "tabletop" design (Modern Boho palette) with light and dark tokens on `:root`
+and `:root[data-theme="dark"]`. An inline script in `index.html` sets `data-theme` before first
+paint from `localStorage` (`dm-theme`) or `prefers-color-scheme`. Fonts: Inter (`--font-sans`) for
+controls, Newsreader (`--font-serif`) for brand, section titles, and card numbers.
 
 Deferred ideas live in `IDEAS.md`.

@@ -50,13 +50,13 @@ const SpotItRenderer = (() => {
       case 'circle':
         return el('circle', {
           cx: CENTER, cy: CENTER, r: RADIUS,
-          fill: 'white', stroke: '#334155', 'stroke-width': 3,
+          fill: 'white', stroke: '#23463c', 'stroke-width': 3,
         });
       case 'square':
         return el('rect', {
           x: CENTER - RADIUS, y: CENTER - RADIUS,
           width: RADIUS * 2, height: RADIUS * 2, rx: 16, ry: 16,
-          fill: 'white', stroke: '#334155', 'stroke-width': 3,
+          fill: 'white', stroke: '#23463c', 'stroke-width': 3,
         });
       case 'hexagon':
       case 'octagon': {
@@ -68,7 +68,7 @@ const SpotItRenderer = (() => {
         }
         return el('polygon', {
           points: pts.join(' '),
-          fill: 'white', stroke: '#334155', 'stroke-width': 3,
+          fill: 'white', stroke: '#23463c', 'stroke-width': 3,
         });
       }
     }

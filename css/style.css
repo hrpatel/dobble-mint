@@ -4,19 +4,20 @@
 
 /* ---------- Design tokens ---------- */
 :root {
-  --bg: #f6f3ee;
-  --surface: #fffdf9;
-  --surface-sunken: #ece7df;
-  --border: #e2dcd2;
-  --border-strong: #cfc7ba;
-  --ink: #1f2328;
-  --ink-soft: #57606a;
-  --ink-muted: #8c959f;
-  --accent: #0f9d8a;
+  /* Modern Boho palette: cream, greige, terracotta, sage, deep green */
+  --bg: #f3ebdf;
+  --surface: #fbf6ef;
+  --surface-sunken: #e9dfd1;
+  --border: #e0d4c4;
+  --border-strong: #cbc2b6;
+  --ink: #23463c;
+  --ink-soft: #56685f;
+  --ink-muted: #7a847e;
+  --accent: #a65a3e; /* deepened from #b5664a for white-text contrast */
   --accent-ink: #ffffff;
-  --accent-soft: rgba(15, 157, 138, 0.14);
-  --error: #c2410c;
-  --error-soft: rgba(194, 65, 12, 0.08);
+  --accent-soft: rgba(181, 102, 74, 0.14);
+  --error: #9c3b22;
+  --error-soft: rgba(229, 122, 85, 0.12);
 
   --card-shadow: 0 1px 2px rgba(60, 45, 20, 0.08), 0 6px 18px rgba(60, 45, 20, 0.10);
   --card-shadow-lift: 0 2px 4px rgba(60, 45, 20, 0.10), 0 14px 32px rgba(60, 45, 20, 0.16);
@@ -34,19 +35,19 @@
 }
 
 :root[data-theme="dark"] {
-  --bg: #16191d;
-  --surface: #1e2227;
-  --surface-sunken: #262b31;
-  --border: #2e343b;
-  --border-strong: #3d444c;
-  --ink: #e8e6e3;
-  --ink-soft: #a9b1ba;
-  --ink-muted: #6e7781;
-  --accent: #3ccfb4;
-  --accent-ink: #0b1f1c;
-  --accent-soft: rgba(60, 207, 180, 0.16);
-  --error: #fb923c;
-  --error-soft: rgba(251, 146, 60, 0.10);
+  --bg: #1c302a;
+  --surface: #23463c;
+  --surface-sunken: #284037;
+  --border: #33524a;
+  --border-strong: #4a6a60;
+  --ink: #f3ebdf;
+  --ink-soft: #cbc2b6;
+  --ink-muted: #929c97;
+  --accent: #f09c8a;
+  --accent-ink: #1c302a;
+  --accent-soft: rgba(240, 156, 138, 0.16);
+  --error: #e2ae62;
+  --error-soft: rgba(226, 174, 98, 0.12);
 
   --card-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 6px 18px rgba(0, 0, 0, 0.35);
   --card-shadow-lift: 0 2px 4px rgba(0, 0, 0, 0.45), 0 14px 32px rgba(0, 0, 0, 0.5);
