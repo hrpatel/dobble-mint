@@ -1,0 +1,343 @@
+/* ===== Dobble Mint · Game screen (builds on style.css tokens) ===== */
+
+body.playing {
+  overflow: hidden;
+}
+
+/* ---------- Start screen ---------- */
+.start {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+}
+
+.start-header {
+  width: 100%;
+  max-width: 960px;
+  display: flex;
+  align-items: center;
+}
+
+.start-header .brand {
+  width: auto;
+  color: inherit;
+  text-decoration: none;
+}
+
+.start-panel {
+  width: min(400px, 100%);
+  margin: auto 0;
+  padding: 32px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  box-shadow: var(--raised-hover);
+}
+
+.start-title {
+  font-family: var(--font-serif);
+  font-size: 2.2rem;
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.start-rules,
+.start-note,
+.start-best {
+  color: var(--ink-soft);
+  line-height: 1.5;
+}
+
+.start-note:empty,
+.start-best:empty {
+  display: none;
+}
+
+.start-best {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 1.05rem;
+  color: var(--ink);
+}
+
+.segmented input:disabled+label {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-large {
+  height: 48px;
+  font-size: 1rem;
+}
+
+.start-edit {
+  align-self: center;
+  color: var(--ink-soft);
+  font-size: 0.85rem;
+}
+
+.start-edit:hover {
+  color: var(--accent);
+}
+
+/* ---------- Board ---------- */
+.board {
+  --card: min(34dvh, 88vw);
+  position: fixed;
+  inset: 0;
+  display: grid;
+  grid-template-rows: 1fr auto 1fr;
+  place-items: center;
+  padding: max(12px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom));
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.board[data-mode="duel"] {
+  --card: min(26dvh, 80vw);
+}
+
+.seat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  transition: opacity var(--ease), filter var(--ease);
+}
+
+/* Far player reads their half upside down when the device lies flat */
+.seat-top {
+  transform: rotate(180deg);
+}
+
+.board[data-mode="solo"] .seat-top,
+.board[data-mode="solo"] .seat-hud,
+.board[data-mode="duel"] #solo-hud {
+  display: none;
+}
+
+/* Solo: center card on top, your card below, HUD between */
+.board[data-mode="solo"] {
+  grid-template-rows: auto 1fr;
+}
+
+.board[data-mode="solo"] .seat-bottom {
+  align-self: start;
+}
+
+.center-row {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.board[data-mode="duel"] .center-row {
+  flex-direction: row;
+  gap: 16px;
+}
+
+.hud {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-height: 2.4rem;
+}
+
+.hud-timer {
+  font-family: var(--font-serif);
+  font-size: 2rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.hud-penalty {
+  color: var(--error);
+  font-weight: 600;
+  opacity: 0;
+}
+
+.hud-penalty.show {
+  animation: penalty 900ms ease-out;
+}
+
+.center-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--ink-soft);
+}
+
+.board[data-mode="duel"] .center-meta {
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pile-count {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 1rem;
+}
+
+.seat-hud {
+  font-family: var(--font-serif);
+  font-size: 1rem;
+  color: var(--ink-soft);
+}
+
+.seat-score {
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Cards ---------- */
+.slot {
+  width: var(--card);
+  height: var(--card);
+}
+
+.slot svg.card {
+  width: 100%;
+  height: 100%;
+  filter: var(--card-depth);
+}
+
+/* The hidden halo doubles as a generous tap target around each emoji */
+.board .symbol-halo {
+  pointer-events: all;
+  cursor: pointer;
+}
+
+.seat.won svg.card {
+  animation: pop 260ms cubic-bezier(0.2, 0.9, 0.3, 1.3);
+}
+
+.seat.shake .slot {
+  animation: shake 320ms ease-in-out;
+}
+
+.seat.locked {
+  opacity: 0.4;
+  filter: grayscale(0.8);
+}
+
+/* ---------- Results ---------- */
+.results {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  grid-template-rows: 1fr auto 1fr;
+  place-items: center;
+  gap: 20px;
+  padding: 20px;
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.results[data-mode="solo"] {
+  grid-template-rows: auto auto;
+  align-content: center;
+}
+
+.results[data-mode="solo"] .result-top {
+  display: none;
+}
+
+.results[data-mode="solo"] .result-actions {
+  order: 2;
+}
+
+.result-top {
+  transform: rotate(180deg);
+}
+
+.result-card {
+  min-width: min(320px, 90vw);
+  padding: 24px 28px;
+  text-align: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  box-shadow: var(--raised-hover);
+  color: var(--ink-soft);
+  line-height: 1.6;
+}
+
+.result-title {
+  font-family: var(--font-serif);
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.result-card p:first-of-type {
+  font-family: var(--font-serif);
+  font-size: 2.4rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+}
+
+.result-actions {
+  display: flex;
+  gap: 10px;
+}
+
+/* ---------- Motion ---------- */
+@keyframes pop {
+  from { transform: scale(0.9); }
+  to { transform: scale(1); }
+}
+
+@keyframes shake {
+  20%, 60% { transform: translateX(-8px); }
+  40%, 80% { transform: translateX(8px); }
+}
+
+@keyframes penalty {
+  0% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-14px); }
+}
+
+/* Wide screens: solo cards side by side */
+@media (orientation: landscape) and (min-width: 700px) {
+  .board[data-mode="solo"] {
+    --card: min(62dvh, 40vw);
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr;
+  }
+
+  .board[data-mode="solo"] .center-row {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .board[data-mode="solo"] .seat-bottom {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .seat.won svg.card,
+  .seat.shake .slot,
+  .hud-penalty.show {
+    animation: none;
+  }
+
+  .hud-penalty.show {
+    opacity: 1;
+  }
+}

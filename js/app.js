@@ -3,19 +3,7 @@
  */
 
 const SpotItApp = (() => {
-  let state = {
-    order: 7,
-    theme: 'animals',
-    shape: 'circle',
-    layout: 'ring',
-    sizeVariance: 0,
-    maxAngle: 0,
-    pageSize: 'letter',
-    cardsPerRow: 3,
-    margin: 5,
-    bleedMarks: true,
-    seed: newSeed(),
-  };
+  let state = { ...SpotItDeck.DEFAULTS, margin: 5, seed: SpotItDeck.newSeed() };
 
   let deck = null;
   let symbols = [];
@@ -24,18 +12,83 @@ const SpotItApp = (() => {
   let matchMode = false;
   let selected = [];
   let preferredTheme = state.theme; // user's last explicit pick; restored when it fits again
+  let view = 'designer'; // 'designer' | 'play', mirrored in the hash as view=play
+  let designerScroll = { page: 0, panel: 0 };
   const sliderSyncs = {};
 
-  function newSeed() {
-    return 1 + Math.floor(Math.random() * 99999);
+  function init() {
+    bindControls();
+    SpotItPlay.init({
+      getDeck: () => (deck ? { key: urlHash('designer'), settings: state, deck, symbols, cardSvgs } : null),
+      setOrder: order => {
+        state.order = order;
+        syncControls();
+        regenerate();
+      },
+      exit: exitPlay,
+    });
+    route();
+    // Fires on manual hash edits and on Back/Forward between designer and play entries
+    window.addEventListener('hashchange', route);
   }
 
-  function init() {
+  // ---------- Views ----------
+
+  /** Apply the URL: rebuild only if deck settings changed, then show the requested view. */
+  function route() {
+    const before = deck && urlHash('designer');
+    const next = new URLSearchParams(location.hash.slice(1)).get('view') === 'play' ? 'play' : 'designer';
+    if (view === 'play' && next === 'designer' && deck) {
+      // Back from the game keeps the deck as it is now (its size may have changed in the game)
+      view = next;
+      writeUrlState();
+      applyView();
+      return;
+    }
+    view = next;
     readUrlState();
-    bindControls();
-    syncControls();
-    regenerate();
-    window.addEventListener('hashchange', () => { readUrlState(); syncControls(); regenerate(); });
+    if (urlHash('designer') !== before) {
+      syncControls();
+      regenerate();
+    } else {
+      writeUrlState();
+    }
+    applyView();
+  }
+
+  function applyView() {
+    const designer = document.getElementById('designer-view');
+    const playing = view === 'play';
+    if (playing === SpotItPlay.isOpen()) return;
+
+    if (playing) {
+      designerScroll = { page: window.scrollY, panel: document.getElementById('panel').scrollTop };
+      designer.classList.add('hidden');
+      SpotItPlay.open();
+      window.scrollTo(0, 0);
+    } else {
+      SpotItPlay.close();
+      designer.classList.remove('hidden');
+      window.scrollTo(0, designerScroll.page);
+      document.getElementById('panel').scrollTop = designerScroll.panel;
+    }
+  }
+
+  function enterPlay() {
+    view = 'play';
+    history.pushState({ fromDesigner: true }, '', `#${urlHash('play')}`);
+    applyView();
+  }
+
+  /** Leave the game: pop our own history entry if we pushed it, else replace the URL. */
+  function exitPlay() {
+    if (history.state?.fromDesigner) {
+      history.back();
+      return;
+    }
+    view = 'designer';
+    writeUrlState();
+    applyView();
   }
 
   function bindControls() {
@@ -87,7 +140,7 @@ const SpotItApp = (() => {
     });
 
     document.getElementById('shuffle-btn').addEventListener('click', () => {
-      state.seed = newSeed();
+      state.seed = SpotItDeck.newSeed();
       seedInput.value = state.seed;
       scheduleUpdate();
     });
@@ -106,6 +159,16 @@ const SpotItApp = (() => {
       writeUrlState();
     });
     document.getElementById('generate-pdf-btn').addEventListener('click', handleGeneratePDF);
+
+    // Play this deck
+    document.getElementById('play-btn').addEventListener('click', enterPlay);
+
+    // Logo: back to the top of the designer
+    document.getElementById('brand-link').addEventListener('click', e => {
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      document.getElementById('panel').scrollTo({ top: 0, behavior: 'smooth' });
+    });
 
     // Copy link
     const copyBtn = document.getElementById('copy-link-btn');
@@ -163,11 +226,9 @@ const SpotItApp = (() => {
   /** Rebuild theme options, disabling themes too small for the current order. */
   function populateThemes() {
     const themeSel = document.getElementById('theme-select');
-    const needed = state.order * state.order + state.order + 1;
+    const needed = SpotItDeck.symbolsNeeded(state.order);
     const themes = SpotItSymbols.getThemes();
-
-    const fits = themes.find(t => t.key === preferredTheme).count >= needed;
-    state.theme = fits ? preferredTheme : 'mixed';
+    state.theme = SpotItDeck.themeFor(preferredTheme, state.order);
 
     themeSel.innerHTML = '';
     themes.forEach(t => {
@@ -184,46 +245,20 @@ const SpotItApp = (() => {
 
   /** Merge valid settings from the URL hash into `state`; invalid or missing keys are ignored. */
   function readUrlState() {
-    const params = new URLSearchParams(location.hash.slice(1));
-    const int = (key, ok) => {
-      const v = Number(params.get(key));
-      return params.has(key) && Number.isSafeInteger(v) && ok(v) ? v : undefined;
-    };
-    const oneOf = (key, list) => (list.includes(params.get(key)) ? params.get(key) : undefined);
-
-    const parsed = {
-      order: int('order', v => SpotItMath.SUPPORTED_ORDERS.includes(v)),
-      theme: oneOf('theme', SpotItSymbols.getThemes().map(t => t.key)),
-      shape: oneOf('shape', ['circle', 'square', 'hexagon', 'octagon']),
-      layout: oneOf('layout', ['ring', 'grid', 'random']),
-      sizeVariance: int('size', v => v >= 0 && v <= 25),
-      maxAngle: int('spin', v => v >= 0 && v <= 180 && v % 10 === 0),
-      seed: int('seed', v => v >= 0 && v <= 0xFFFFFFFF),
-      pageSize: oneOf('page', ['a4', 'letter']),
-      cardsPerRow: int('perRow', v => [2, 3, 4].includes(v)),
-      bleedMarks: params.has('bleed') ? params.get('bleed') !== '0' : undefined,
-    };
-    for (const [key, value] of Object.entries(parsed)) {
-      if (value !== undefined) state[key] = value;
-    }
+    const parsed = SpotItDeck.parse(location.hash);
+    Object.assign(state, parsed);
     if (parsed.theme) preferredTheme = parsed.theme;
+  }
+
+  /** Hash for the current settings, plus view=play when `v` is the game. */
+  function urlHash(v = view) {
+    const hash = SpotItDeck.serialize({ ...state, theme: preferredTheme });
+    return v === 'play' ? `${hash}&view=play` : hash;
   }
 
   /** Mirror `state` into the URL hash without adding history entries. */
   function writeUrlState() {
-    const params = new URLSearchParams({
-      order: state.order,
-      theme: preferredTheme,
-      shape: state.shape,
-      layout: state.layout,
-      size: state.sizeVariance,
-      spin: state.maxAngle,
-      seed: state.seed,
-      page: state.pageSize,
-      perRow: state.cardsPerRow,
-      bleed: state.bleedMarks ? 1 : 0,
-    });
-    history.replaceState(null, '', `#${params}`);
+    history.replaceState(history.state, '', `#${urlHash()}`);
   }
 
   /** Push `state` into every control (used on load and when the hash changes). */
@@ -246,48 +281,23 @@ const SpotItApp = (() => {
 
   function regenerate() {
     writeUrlState();
-    let rawDeck;
     try {
-      rawDeck = SpotItMath.buildDeck(state.order);
+      ({ deck, symbols, cardSvgs } = SpotItDeck.build(state));
     } catch (e) {
       showError(e.message);
       return;
     }
-
-    const prng = SpotItMath.makePRNG(state.seed);
-    symbols = SpotItSymbols.getSymbols(state.theme, rawDeck.numSymbols, prng);
-
-    if (symbols.length < rawDeck.numSymbols) {
-      showError(`Theme "${state.theme}" only has ${symbols.length} symbols, but ${rawDeck.numSymbols} are needed for order ${state.order}. Try "Mixed" theme.`);
-      return;
-    }
-
-    deck = SpotItMath.shuffleDeck(rawDeck, prng);
     clearError();
-    renderAllCards(deck, symbols, prng);
+    renderAllCards();
   }
 
-  function renderAllCards(deck, symbols, prng) {
+  function renderAllCards() {
     const grid = document.getElementById('card-grid');
     const frag = document.createDocumentFragment();
-    cardSvgs = [];
+    const digits = String(cardSvgs.length).length;
     selected = [];
 
-    const options = {
-      shape: state.shape,
-      layout: state.layout,
-      randomSize: state.sizeVariance > 0,
-      sizeRange: [1.0 - (state.sizeVariance / 100), 1.0 + (state.sizeVariance / 100)],
-      randomAngle: state.maxAngle > 0,
-      maxAngle: state.maxAngle,
-    };
-    const digits = String(deck.cards.length).length;
-
-    for (let i = 0; i < deck.cards.length; i++) {
-      const cardSymbols = deck.cards[i].map(idx => symbols[idx]);
-      const svg = SpotItRenderer.renderCard(cardSymbols, options, prng, `clip-${i}`);
-      cardSvgs.push(svg);
-
+    cardSvgs.forEach((svg, i) => {
       const wrapper = document.createElement('button');
       wrapper.type = 'button';
       wrapper.className = 'card-wrapper';
@@ -301,7 +311,7 @@ const SpotItApp = (() => {
       wrapper.appendChild(label);
 
       frag.appendChild(wrapper);
-    }
+    });
 
     grid.replaceChildren(frag);
     applySelection();

@@ -3,9 +3,9 @@
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="description"
-    content="Generate custom Spot It / Dobble game cards with configurable symbols, shapes, layouts, and export to PDF.">
+    content="Generate custom Spot It / Dobble game cards, export them to PDF, and play solo or with two players.">
   <title>Dobble Mint · Spot It Card Generator</title>
   <script>
     // Apply saved color scheme before first paint to avoid a flash
@@ -13,16 +13,20 @@
       (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
   </script>
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/play.css">
 </head>
 
 <body>
-  <div class="app">
+  <!-- ===== DESIGNER VIEW ===== -->
+  <div class="app" id="designer-view">
     <!-- ===== TOP BAR ===== -->
     <header class="topbar">
-      <div class="brand">
-        <span class="brand-mark" aria-hidden="true">◉</span>
+      <a class="brand" href="./" id="brand-link" title="Back to top">
+        <svg class="brand-mark" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8.5"
+            fill="none" stroke="currentColor" stroke-width="2" /><circle cx="10" cy="10" r="4.5"
+            fill="currentColor" /></svg>
         <span class="brand-name">Dobble Mint</span>
-      </div>
+      </a>
 
       <div class="topbar-deck">
         <label class="visually-hidden" for="order-select">Deck size</label>
@@ -40,6 +44,7 @@
           title="Click two cards to reveal their shared symbol">Find the match</button>
         <button class="btn btn-icon" id="color-scheme-btn" title="Toggle dark mode"
           aria-label="Toggle dark mode">☾</button>
+        <button class="btn btn-ghost" id="play-btn" title="Play a game with this deck">Play ▶</button>
         <button class="btn btn-primary" id="generate-pdf-btn">Export PDF</button>
       </div>
     </header>
@@ -134,6 +139,81 @@
     </main>
   </div>
 
+  <!-- ===== PLAY VIEW ===== -->
+  <div id="play-view" class="play-view hidden">
+    <!-- ===== START ===== -->
+    <section id="start-screen" class="start">
+      <header class="start-header">
+        <a class="brand" href="./" id="play-brand-link" title="Back to the designer">
+          <svg class="brand-mark" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8.5"
+              fill="none" stroke="currentColor" stroke-width="2" /><circle cx="10" cy="10" r="4.5"
+              fill="currentColor" /></svg>
+          <span class="brand-name">Dobble Mint</span>
+        </a>
+      </header>
+
+      <section class="start-panel">
+        <h1 class="start-title">The Tower</h1>
+        <p class="start-rules">Tap the symbol your card shares with the center card to win it.
+          Keep going until the pile is gone.</p>
+
+        <div class="segmented" id="mode-picker">
+          <input type="radio" name="mode" id="mode-solo" value="solo" checked>
+          <label for="mode-solo">Solo</label>
+          <input type="radio" name="mode" id="mode-duel" value="duel">
+          <label for="mode-duel">2 Players</label>
+        </div>
+        <p class="start-note" id="mode-note"></p>
+
+        <div class="field-row">
+          <label for="play-order">Deck</label>
+          <select id="play-order"></select>
+        </div>
+
+        <p class="start-best" id="best-time" aria-live="polite"></p>
+
+        <button class="btn btn-primary btn-large" id="start-btn">Start</button>
+        <a class="start-edit" id="edit-link" href="./">Edit this deck</a>
+        <p id="play-error" class="error-msg hidden" role="alert"></p>
+      </section>
+    </section>
+
+    <!-- ===== BOARD ===== -->
+    <section id="board" class="board hidden" data-mode="solo" aria-label="Game board">
+      <div class="seat seat-top" data-seat="1">
+        <div class="seat-hud"><span class="seat-score" id="score-1">0</span> cards</div>
+        <div class="slot" data-slot="p1"></div>
+      </div>
+
+      <div class="center-row">
+        <div class="hud" id="solo-hud">
+          <span class="hud-timer" id="timer">0:00.0</span>
+          <span class="hud-penalty" id="penalty-toast" aria-live="polite"></span>
+        </div>
+        <div class="slot slot-center" data-slot="center"></div>
+        <div class="center-meta">
+          <span class="pile-count"><span id="cards-left">0</span> left</span>
+          <button class="btn btn-icon" id="quit-btn" title="Quit game" aria-label="Quit game">✕</button>
+        </div>
+      </div>
+
+      <div class="seat seat-bottom" data-seat="0">
+        <div class="slot" data-slot="p0"></div>
+        <div class="seat-hud"><span class="seat-score" id="score-0">0</span> cards</div>
+      </div>
+    </section>
+
+    <!-- ===== RESULTS ===== -->
+    <section id="results" class="results hidden" aria-live="polite">
+      <div class="result-card result-top" id="result-1"></div>
+      <div class="result-actions">
+        <button class="btn btn-primary" id="again-btn">Play again</button>
+        <button class="btn btn-ghost" id="menu-btn">Menu</button>
+      </div>
+      <div class="result-card" id="result-0"></div>
+    </section>
+  </div>
+
   <!-- Libraries (CDN) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/4.2.1/jspdf.umd.min.js"
     integrity="sha512-plOdviVmws4Y3JAvbnpfKb2hVxKM1lCwsi3vmElYRj+tiDLffZ4FVUj5a8vyKJ9pIgl8JCAHEJ4D1iUKBecswg=="
@@ -143,7 +223,10 @@
   <script src="js/math.js"></script>
   <script src="js/symbols.js"></script>
   <script src="js/renderer.js"></script>
+  <script src="js/deck.js"></script>
   <script src="js/pdf.js"></script>
+  <script src="js/game.js"></script>
+  <script src="js/play.js"></script>
   <script src="js/app.js"></script>
 </body>
 

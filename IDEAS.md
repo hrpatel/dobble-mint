@@ -11,5 +11,11 @@ Improvements considered but not yet implemented.
 - **Consistent emoji across platforms.** Symbols use the OS emoji font, so decks look different
   on macOS, Windows, and Android. Bundling an open emoji set (e.g. Twemoji or Noto SVGs) would
   make output identical everywhere.
+- **Online two-player.** Both devices open the same deck link, so only claims need sending.
+  GitHub Pages has no server: use WebRTC (e.g. PeerJS, paired by QR code) with one device as
+  referee to settle who tapped first.
+- **Computer opponent.** A bot with adjustable reaction time for solo play.
+- **Game polish.** Sound effects, other Spot It variants (The Well, Hot Potato), and two-player
+  on desktop (side by side with keyboard keys mapped to symbols).
 - **Larger single-theme decks.** Orders 11 and 13 need 133 and 183 symbols; every single theme
   is smaller, so only Mixed works. Growing the themes would unlock them.
