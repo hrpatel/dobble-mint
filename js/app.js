@@ -24,14 +24,18 @@ const SpotItApp = (() => {
   let matchMode = false;
   let selected = [];
   let preferredTheme = state.theme; // user's last explicit pick; restored when it fits again
+  const sliderSyncs = {};
 
   function newSeed() {
     return 1 + Math.floor(Math.random() * 99999);
   }
 
   function init() {
+    readUrlState();
     bindControls();
+    syncControls();
     regenerate();
+    window.addEventListener('hashchange', () => { readUrlState(); syncControls(); regenerate(); });
   }
 
   function bindControls() {
@@ -89,10 +93,32 @@ const SpotItApp = (() => {
     });
 
     // Export
-    document.getElementById('page-size').addEventListener('change', e => { state.pageSize = e.target.value; });
-    document.getElementById('cards-per-row').addEventListener('change', e => { state.cardsPerRow = +e.target.value; });
-    document.getElementById('bleed-marks').addEventListener('change', e => { state.bleedMarks = e.target.checked; });
+    document.getElementById('page-size').addEventListener('change', e => {
+      state.pageSize = e.target.value;
+      writeUrlState();
+    });
+    document.getElementById('cards-per-row').addEventListener('change', e => {
+      state.cardsPerRow = +e.target.value;
+      writeUrlState();
+    });
+    document.getElementById('bleed-marks').addEventListener('change', e => {
+      state.bleedMarks = e.target.checked;
+      writeUrlState();
+    });
     document.getElementById('generate-pdf-btn').addEventListener('click', handleGeneratePDF);
+
+    // Copy link
+    const copyBtn = document.getElementById('copy-link-btn');
+    copyBtn.addEventListener('click', async () => {
+      writeUrlState();
+      try {
+        await navigator.clipboard.writeText(location.href);
+        copyBtn.textContent = 'Copied';
+      } catch {
+        copyBtn.textContent = 'Copy failed';
+      }
+      setTimeout(() => { copyBtn.textContent = 'Copy link'; }, 1500);
+    });
 
     // Color scheme
     const schemeBtn = document.getElementById('color-scheme-btn');
@@ -126,8 +152,7 @@ const SpotItApp = (() => {
       output.textContent = format(state[key]);
       input.style.setProperty('--fill', `${(100 * (state[key] - input.min)) / (input.max - input.min)}%`);
     };
-    input.value = state[key];
-    sync();
+    sliderSyncs[key] = () => { input.value = state[key]; sync(); };
     input.addEventListener('input', e => {
       state[key] = +e.target.value;
       sync();
@@ -155,12 +180,72 @@ const SpotItApp = (() => {
     });
   }
 
+  // ---------- URL state ----------
+
+  /** Merge valid settings from the URL hash into `state`; invalid or missing keys are ignored. */
+  function readUrlState() {
+    const params = new URLSearchParams(location.hash.slice(1));
+    const int = (key, ok) => {
+      const v = Number(params.get(key));
+      return params.has(key) && Number.isSafeInteger(v) && ok(v) ? v : undefined;
+    };
+    const oneOf = (key, list) => (list.includes(params.get(key)) ? params.get(key) : undefined);
+
+    const parsed = {
+      order: int('order', v => SpotItMath.SUPPORTED_ORDERS.includes(v)),
+      theme: oneOf('theme', SpotItSymbols.getThemes().map(t => t.key)),
+      shape: oneOf('shape', ['circle', 'square', 'hexagon', 'octagon']),
+      layout: oneOf('layout', ['ring', 'grid', 'random']),
+      sizeVariance: int('size', v => v >= 0 && v <= 25),
+      maxAngle: int('spin', v => v >= 0 && v <= 180 && v % 10 === 0),
+      seed: int('seed', v => v >= 0 && v <= 0xFFFFFFFF),
+      pageSize: oneOf('page', ['a4', 'letter']),
+      cardsPerRow: int('perRow', v => [2, 3, 4].includes(v)),
+      bleedMarks: params.has('bleed') ? params.get('bleed') !== '0' : undefined,
+    };
+    for (const [key, value] of Object.entries(parsed)) {
+      if (value !== undefined) state[key] = value;
+    }
+    if (parsed.theme) preferredTheme = parsed.theme;
+  }
+
+  /** Mirror `state` into the URL hash without adding history entries. */
+  function writeUrlState() {
+    const params = new URLSearchParams({
+      order: state.order,
+      theme: preferredTheme,
+      shape: state.shape,
+      layout: state.layout,
+      size: state.sizeVariance,
+      spin: state.maxAngle,
+      seed: state.seed,
+      page: state.pageSize,
+      perRow: state.cardsPerRow,
+      bleed: state.bleedMarks ? 1 : 0,
+    });
+    history.replaceState(null, '', `#${params}`);
+  }
+
+  /** Push `state` into every control (used on load and when the hash changes). */
+  function syncControls() {
+    document.getElementById('order-select').value = state.order;
+    populateThemes();
+    document.getElementById(`shape-${state.shape}`).checked = true;
+    document.getElementById(`layout-${state.layout}`).checked = true;
+    Object.values(sliderSyncs).forEach(sync => sync());
+    document.getElementById('seed-input').value = state.seed;
+    document.getElementById('page-size').value = state.pageSize;
+    document.getElementById('cards-per-row').value = state.cardsPerRow;
+    document.getElementById('bleed-marks').checked = state.bleedMarks;
+  }
+
   function scheduleUpdate() {
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(regenerate, 200);
   }
 
   function regenerate() {
+    writeUrlState();
     let rawDeck;
     try {
       rawDeck = SpotItMath.buildDeck(state.order);

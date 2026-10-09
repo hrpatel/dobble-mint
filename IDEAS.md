@@ -2,8 +2,6 @@
 
 Improvements considered but not yet implemented.
 
-- **Shareable URL state.** Persist all settings and the seed in the URL hash so a deck can be
-  bookmarked, shared, or regenerated exactly.
 - **Custom symbols.** Let users add their own text or uploaded images (family photos, class
   vocabulary). Needs a symbol editor and image support in both the SVG renderer and PDF export.
 - **Card backs.** Optional back design (logo, pattern) printed on alternating pages for duplex.

@@ -1,6 +1,6 @@
 /* ===== Dobble Mint · Tabletop design ===== */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,500&display=swap');
 
 /* ---------- Design tokens ---------- */
 :root {
@@ -20,6 +20,9 @@
 
   --card-shadow: 0 1px 2px rgba(60, 45, 20, 0.08), 0 6px 18px rgba(60, 45, 20, 0.10);
   --card-shadow-lift: 0 2px 4px rgba(60, 45, 20, 0.10), 0 14px 32px rgba(60, 45, 20, 0.16);
+
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-serif: 'Newsreader', Georgia, 'Times New Roman', serif;
 
   --radius-sm: 8px;
   --radius-md: 12px;
@@ -61,7 +64,7 @@
 }
 
 body {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: var(--font-sans);
   font-size: 14px;
   background: var(--bg);
   color: var(--ink);
@@ -129,8 +132,9 @@ body {
 }
 
 .brand-name {
-  font-size: 1.1rem;
-  font-weight: 700;
+  font-family: var(--font-serif);
+  font-size: 1.4rem;
+  font-weight: 600;
   letter-spacing: -0.01em;
 }
 
@@ -161,11 +165,10 @@ body {
 }
 
 .panel-title {
-  font-size: 0.7rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--ink-muted);
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  font-weight: 500;
+  color: var(--ink);
   margin-bottom: 10px;
 }
 
@@ -464,7 +467,9 @@ input[type="range"]::-moz-range-thumb {
 }
 
 .card-label {
-  font-size: 0.75rem;
+  font-family: var(--font-serif);
+  font-size: 0.9rem;
+  font-style: italic;
   font-weight: 500;
   font-variant-numeric: tabular-nums;
   color: var(--ink-muted);

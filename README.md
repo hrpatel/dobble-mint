@@ -29,6 +29,7 @@ This generator currently supports prime orders $n \in \{2, 3, 5, 7, 11, 13\}$.
 - **Deep Customization:**
   - Size variance and rotation sliders.
   - Editable seed for reproducible decks.
+- **Shareable Links:** Every setting and the seed live in the URL, so a link recreates the exact deck.
 - **Find the Match:** Click any two cards to highlight the symbol they share.
 - **Light and Dark Modes:** Follows your system setting, with a manual toggle.
 - **High-Quality PDF Export:** Hardware-accelerated canvas rasterization generates incredibly crisp, print-ready PDFs (with optional bleed marks) while perfectly preserving complex system emojis without bloating file sizes.

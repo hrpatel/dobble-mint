@@ -48,6 +48,14 @@ Each rendered symbol is a `<g class="symbol" data-symbol="…">` containing a ha
 to reveal it. The PDF path serializes the SVG without page CSS, so highlights never print;
 keep highlight styling in CSS, not SVG attributes.
 
+### URL state
+
+All settings plus the seed are mirrored into the URL hash (`#order=7&theme=food&seed=…`) via
+`history.replaceState` on every regenerate and print-setting change. `readUrlState()` validates
+each key and ignores bad values; `syncControls()` pushes `state` into the DOM on load and on
+`hashchange`. New settings need a parse rule, a write key, and a `syncControls()` line. The URL
+stores the user's preferred theme, not the Mixed fallback.
+
 ### Reproducibility
 
 One PRNG seeded from `state.seed` drives symbol shuffling and all per-card layout randomness,
@@ -59,6 +67,8 @@ when changing the renderer.
 
 `css/style.css` uses a "tabletop" design with light and dark tokens on `:root` and
 `:root[data-theme="dark"]`. An inline script in `index.html` sets `data-theme` before first
-paint from `localStorage` (`dm-theme`) or `prefers-color-scheme`.
+paint from `localStorage` (`dm-theme`) or `prefers-color-scheme`. Fonts: Inter
+(`--font-sans`) for controls, Newsreader (`--font-serif`) for brand, section titles, and card
+numbers.
 
 Deferred ideas live in `IDEAS.md`.
