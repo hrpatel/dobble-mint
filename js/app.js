@@ -8,21 +8,25 @@ const SpotItApp = (() => {
     theme: 'animals',
     shape: 'circle',
     layout: 'ring',
-    randomSize: false,
-    sizeVariance: 25,
-    randomAngle: false,
-    maxAngle: 180,
+    sizeVariance: 0,
+    maxAngle: 0,
     pageSize: 'letter',
     cardsPerRow: 3,
     margin: 5,
     bleedMarks: true,
-    seed: Date.now(),
+    seed: newSeed(),
   };
 
   let deck = null;
   let symbols = [];
   let cardSvgs = [];
   let debounceTimer = null;
+  let matchMode = false;
+  let selected = [];
+
+  function newSeed() {
+    return 1 + Math.floor(Math.random() * 99999);
+  }
 
   function init() {
     bindControls();
@@ -36,22 +40,22 @@ const SpotItApp = (() => {
       const total = n * n + n + 1;
       const opt = document.createElement('option');
       opt.value = n;
-      opt.textContent = `n = ${n}  →  ${total} cards, ${n + 1} symbols/card`;
+      opt.textContent = `${total} cards · ${n + 1} per card`;
       if (n === state.order) opt.selected = true;
       orderSel.appendChild(opt);
     });
-    orderSel.addEventListener('change', e => { state.order = +e.target.value; scheduleUpdate(); });
+    orderSel.addEventListener('change', e => {
+      state.order = +e.target.value;
+      populateThemes();
+      scheduleUpdate();
+    });
 
     // Theme
-    const themeSel = document.getElementById('theme-select');
-    SpotItSymbols.getThemes().forEach(t => {
-      const opt = document.createElement('option');
-      opt.value = t.key;
-      opt.textContent = `${t.label} (${t.count})`;
-      if (t.key === state.theme) opt.selected = true;
-      themeSel.appendChild(opt);
+    populateThemes();
+    document.getElementById('theme-select').addEventListener('change', e => {
+      state.theme = e.target.value;
+      scheduleUpdate();
     });
-    themeSel.addEventListener('change', e => { state.theme = e.target.value; scheduleUpdate(); });
 
     // Shape
     document.querySelectorAll('input[name="shape"]').forEach(inp => {
@@ -63,39 +67,23 @@ const SpotItApp = (() => {
       inp.addEventListener('change', e => { state.layout = e.target.value; scheduleUpdate(); });
     });
 
-    // Random size
-    const sizeToggle = document.getElementById('random-size');
-    const sizeVarianceInput = document.getElementById('size-variance');
-    const sizeVarianceVal = document.getElementById('size-variance-val');
+    // Variation sliders (0 = off)
+    bindSlider('size-variance', 'sizeVariance', v => (v ? `±${v}%` : 'Off'));
+    bindSlider('max-angle', 'maxAngle', v => (v ? `${v}°` : 'Off'));
 
-    sizeToggle.addEventListener('change', e => {
-      state.randomSize = e.target.checked;
-      console.log('Random size toggled:', state.randomSize);
-      const group = document.getElementById('size-range-group');
-      if (group) group.classList.toggle('hidden', !state.randomSize);
-      scheduleUpdate();
-    });
-    sizeVarianceInput.addEventListener('input', e => {
-      state.sizeVariance = +e.target.value;
-      if (sizeVarianceVal) sizeVarianceVal.textContent = state.sizeVariance;
+    // Seed
+    const seedInput = document.getElementById('seed-input');
+    seedInput.value = state.seed;
+    seedInput.addEventListener('change', e => {
+      const seed = Math.trunc(+e.target.value);
+      if (!Number.isFinite(seed) || seed < 0) { seedInput.value = state.seed; return; }
+      state.seed = seed;
       scheduleUpdate();
     });
 
-    // Random angle
-    const angleToggle = document.getElementById('random-angle');
-    const maxAngleInput = document.getElementById('max-angle');
-    const maxAngleVal = document.getElementById('max-angle-val');
-
-    angleToggle.addEventListener('change', e => {
-      state.randomAngle = e.target.checked;
-      console.log('Random angle toggled:', state.randomAngle);
-      const group = document.getElementById('angle-range-group');
-      if (group) group.classList.toggle('hidden', !state.randomAngle);
-      scheduleUpdate();
-    });
-    maxAngleInput.addEventListener('input', e => {
-      state.maxAngle = +e.target.value;
-      if (maxAngleVal) maxAngleVal.textContent = `${state.maxAngle}°`;
+    document.getElementById('shuffle-btn').addEventListener('click', () => {
+      state.seed = newSeed();
+      seedInput.value = state.seed;
       scheduleUpdate();
     });
 
@@ -103,19 +91,65 @@ const SpotItApp = (() => {
     document.getElementById('page-size').addEventListener('change', e => { state.pageSize = e.target.value; });
     document.getElementById('cards-per-row').addEventListener('change', e => { state.cardsPerRow = +e.target.value; });
     document.getElementById('bleed-marks').addEventListener('change', e => { state.bleedMarks = e.target.checked; });
-
-    // Shuffle
-    document.getElementById('shuffle-btn').addEventListener('click', () => {
-      state.seed = Date.now();
-      scheduleUpdate();
-    });
-
-    // Generate PDF
     document.getElementById('generate-pdf-btn').addEventListener('click', handleGeneratePDF);
 
-    // Responsive redraw
-    window.addEventListener('resize', () => {
+    // Color scheme
+    const schemeBtn = document.getElementById('color-scheme-btn');
+    const syncSchemeIcon = () => {
+      schemeBtn.textContent = document.documentElement.dataset.theme === 'dark' ? '☀' : '☾';
+    };
+    syncSchemeIcon();
+    schemeBtn.addEventListener('click', () => {
+      const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+      document.documentElement.dataset.theme = next;
+      localStorage.setItem('dm-theme', next);
+      syncSchemeIcon();
+    });
+
+    // Find the match
+    document.getElementById('match-btn').addEventListener('click', () => setMatchMode(!matchMode));
+    document.getElementById('card-grid').addEventListener('click', e => {
+      const wrapper = e.target.closest('.card-wrapper');
+      if (matchMode && wrapper) selectCard(+wrapper.dataset.index);
+    });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && matchMode) { selected = []; applySelection(); }
+    });
+  }
+
+  /** Bind a range input to a numeric state key and its <output> label. */
+  function bindSlider(id, key, format) {
+    const input = document.getElementById(id);
+    const output = document.getElementById(`${id}-val`);
+    const sync = () => {
+      output.textContent = format(state[key]);
+      input.style.setProperty('--fill', `${(100 * (state[key] - input.min)) / (input.max - input.min)}%`);
+    };
+    input.value = state[key];
+    sync();
+    input.addEventListener('input', e => {
+      state[key] = +e.target.value;
+      sync();
       scheduleUpdate();
+    });
+  }
+
+  /** Rebuild theme options, disabling themes too small for the current order. */
+  function populateThemes() {
+    const themeSel = document.getElementById('theme-select');
+    const needed = state.order * state.order + state.order + 1;
+    const themes = SpotItSymbols.getThemes();
+
+    if (themes.find(t => t.key === state.theme).count < needed) state.theme = 'mixed';
+
+    themeSel.innerHTML = '';
+    themes.forEach(t => {
+      const opt = document.createElement('option');
+      opt.value = t.key;
+      opt.disabled = t.count < needed;
+      opt.textContent = opt.disabled ? `${t.label} · needs ${needed}` : t.label;
+      opt.selected = t.key === state.theme;
+      themeSel.appendChild(opt);
     });
   }
 
@@ -125,83 +159,124 @@ const SpotItApp = (() => {
   }
 
   function regenerate() {
+    let rawDeck;
     try {
-      deck = SpotItMath.buildDeck(state.order);
+      rawDeck = SpotItMath.buildDeck(state.order);
     } catch (e) {
       showError(e.message);
       return;
     }
 
     const prng = SpotItMath.makePRNG(state.seed);
-    symbols = SpotItSymbols.getSymbols(state.theme, deck.numSymbols, prng);
+    symbols = SpotItSymbols.getSymbols(state.theme, rawDeck.numSymbols, prng);
 
-    if (symbols.length < deck.numSymbols) {
-      showError(`Theme "${state.theme}" only has ${symbols.length} symbols, but ${deck.numSymbols} are needed for order ${state.order}. Try "Mixed" theme.`);
+    if (symbols.length < rawDeck.numSymbols) {
+      showError(`Theme "${state.theme}" only has ${symbols.length} symbols, but ${rawDeck.numSymbols} are needed for order ${state.order}. Try "Mixed" theme.`);
       return;
     }
 
+    deck = SpotItMath.shuffleDeck(rawDeck, prng);
     clearError();
     renderAllCards(deck, symbols, prng);
   }
 
   function renderAllCards(deck, symbols, prng) {
     const grid = document.getElementById('card-grid');
-    grid.innerHTML = '';
+    const frag = document.createDocumentFragment();
     cardSvgs = [];
+    selected = [];
 
     const options = {
       shape: state.shape,
       layout: state.layout,
-      randomSize: state.randomSize,
+      randomSize: state.sizeVariance > 0,
       sizeRange: [1.0 - (state.sizeVariance / 100), 1.0 + (state.sizeVariance / 100)],
-      randomAngle: state.randomAngle,
+      randomAngle: state.maxAngle > 0,
       maxAngle: state.maxAngle,
     };
-
-    // Dynamically calculate how many cards to preview to perfectly fill the available space
-    let maxPreview = 1;
-    if (window.innerWidth > 1024) {
-      // 1. Calculate columns based on CSS grid min-width (280px) and gap (24px)
-      const mainWidth = window.innerWidth - 388; // Sidebar 340 + padding 48
-      const columns = Math.max(1, Math.floor((mainWidth + 24) / 304));
-      
-      // 2. CSS Grid uses '1fr', so cards stretch to fill the row. Calculate their actual stretched size.
-      const actualCardSize = (mainWidth - ((columns - 1) * 24)) / columns;
-      
-      // 3. Calculate rows using the actual stretched card height (plus some buffer for the footer)
-      const mainHeight = window.innerHeight - 120;
-      const rows = Math.max(1, Math.floor((mainHeight + 24) / (actualCardSize + 24)));
-      
-      maxPreview = columns * rows;
-    }
-    const previewCount = Math.min(deck.cards.length, maxPreview);
+    const digits = String(deck.cards.length).length;
 
     for (let i = 0; i < deck.cards.length; i++) {
       const cardSymbols = deck.cards[i].map(idx => symbols[idx]);
-      const clipId = `clip-${i}`;
-      const svg = SpotItRenderer.renderCard(cardSymbols, options, prng, clipId);
+      const svg = SpotItRenderer.renderCard(cardSymbols, options, prng, `clip-${i}`);
       cardSvgs.push(svg);
 
-      if (i < previewCount) {
-        const wrapper = document.createElement('div');
-        wrapper.className = 'card-wrapper';
-        wrapper.appendChild(svg);
+      const wrapper = document.createElement('button');
+      wrapper.type = 'button';
+      wrapper.className = 'card-wrapper';
+      wrapper.dataset.index = i;
+      wrapper.disabled = !matchMode;
+      wrapper.appendChild(svg);
 
-        const label = document.createElement('span');
-        label.className = 'card-label';
-        label.textContent = `#${i + 1} of ${deck.cards.length}`;
-        wrapper.appendChild(label);
+      const label = document.createElement('span');
+      label.className = 'card-label';
+      label.textContent = String(i + 1).padStart(digits, '0');
+      wrapper.appendChild(label);
 
-        grid.appendChild(wrapper);
-      }
+      frag.appendChild(wrapper);
     }
 
+    grid.replaceChildren(frag);
+    applySelection();
+  }
+
+  // ---------- Find the match ----------
+
+  function setMatchMode(on) {
+    matchMode = on;
+    selected = [];
+    document.getElementById('match-btn').setAttribute('aria-pressed', String(on));
+    document.querySelector('.main').classList.toggle('match-mode', on);
+    document.querySelectorAll('.card-wrapper').forEach(w => { w.disabled = !on; });
+    applySelection();
+  }
+
+  function selectCard(i) {
+    if (selected.length === 2) selected = [i];
+    else if (selected.includes(i)) selected = selected.filter(s => s !== i);
+    else selected.push(i);
+    applySelection();
+  }
+
+  /** Sync card highlight classes and the hint text with `selected`. */
+  function applySelection() {
+    const hint = document.getElementById('match-hint');
+    const wrappers = document.querySelectorAll('.card-wrapper');
+    const label = i => wrappers[i].querySelector('.card-label').textContent;
+
+    wrappers.forEach((w, i) => {
+      w.classList.toggle('is-selected', selected.includes(i));
+      w.classList.remove('is-paired');
+      w.setAttribute('aria-pressed', String(selected.includes(i)));
+    });
+    document.querySelectorAll('.symbol.is-match').forEach(s => s.classList.remove('is-match'));
+
+    hint.classList.toggle('hidden', !matchMode);
+    if (!matchMode) return;
+
+    if (selected.length < 2) {
+      hint.textContent = selected.length
+        ? `Card ${label(selected[0])} picked. Pick another card.`
+        : 'Pick any two cards to reveal the symbol they share.';
+      return;
+    }
+
+    const [a, b] = selected;
+    const shared = deck.cards[a].find(s => deck.cards[b].includes(s));
+    const glyph = symbols[shared];
+    for (const i of selected) {
+      wrappers[i].classList.add('is-paired');
+      wrappers[i].querySelectorAll('.symbol').forEach(s => {
+        if (s.dataset.symbol === glyph) s.classList.add('is-match');
+      });
+    }
+    hint.textContent = `Cards ${label(a)} and ${label(b)} share ${glyph}. Pick another card to start over.`;
   }
 
   async function handleGeneratePDF() {
     const btn = document.getElementById('generate-pdf-btn');
     btn.disabled = true;
-    btn.textContent = 'Generating…';
+    btn.textContent = 'Exporting…';
 
     try {
       await SpotItPDF.generatePDF(cardSvgs, {
@@ -214,7 +289,7 @@ const SpotItApp = (() => {
       showError('PDF generation failed: ' + e.message);
     } finally {
       btn.disabled = false;
-      btn.textContent = 'Download PDF';
+      btn.textContent = 'Export PDF';
     }
   }
 

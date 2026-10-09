@@ -6,152 +6,129 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description"
     content="Generate custom Spot It / Dobble game cards with configurable symbols, shapes, layouts, and export to PDF.">
-  <title>Dobble Mint — Spot It Card Generator</title>
+  <title>Dobble Mint · Spot It Card Generator</title>
+  <script>
+    // Apply saved color scheme before first paint to avoid a flash
+    document.documentElement.dataset.theme = localStorage.getItem('dm-theme') ||
+      (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  </script>
   <link rel="stylesheet" href="css/style.css">
 </head>
 
 <body>
   <div class="app">
-    <!-- ===== SIDEBAR ===== -->
-    <aside class="sidebar" id="sidebar">
-      <div class="sidebar-header"
-        style="text-align: left; padding-bottom: 0; margin-bottom: 12px; border-bottom: none;">
-        <h1 style="font-size: 1.8rem;">⊙ Dobble Mint</h1>
-        <p style="font-size: 0.85rem;">Finite projective plane card builder</p>
+    <!-- ===== TOP BAR ===== -->
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">◉</span>
+        <span class="brand-name">Dobble Mint</span>
       </div>
 
-      <!-- Error -->
-      <div id="error-msg" class="error-msg hidden"></div>
+      <div class="topbar-deck">
+        <label class="visually-hidden" for="order-select">Deck size</label>
+        <select id="order-select" title="Projective plane order"></select>
 
-      <!-- Deck settings -->
-      <div class="section">
-        <div class="section-title">Projective Plane Order</div>
-        <div class="control-group" style="margin-bottom: 0;">
-          <select id="order-select"></select>
-        </div>
+        <label class="visually-hidden" for="theme-select">Symbol theme</label>
+        <select id="theme-select"></select>
 
-        <br>
-
-        <!-- Symbols -->
-        <div class="section-title">Symbol Theme</div>
-        <div class="control-group" style="margin-bottom: 0;">
-          <div style="display: flex; gap: 8px;">
-            <select id="theme-select" style="flex: 1;"></select>
-            <button class="btn btn-secondary" id="shuffle-btn"
-              style="padding: 8px 12px; width: auto; font-size: 0.8rem;" title="Shuffle Symbols">
-              🔀 Shuffle
-            </button>
-          </div>
-        </div>
+        <button class="btn btn-icon" id="shuffle-btn" title="Shuffle deck" aria-label="Shuffle deck">⟳</button>
       </div>
 
-      <!-- Card shape -->
-      <div class="section">
-        <div class="section-title">Card Shape</div>
-        <div class="toggle-group">
+      <div class="topbar-actions">
+        <button class="btn btn-ghost" id="match-btn" aria-pressed="false"
+          title="Click two cards to reveal their shared symbol">Find the match</button>
+        <button class="btn btn-icon" id="color-scheme-btn" title="Toggle dark mode"
+          aria-label="Toggle dark mode">☾</button>
+        <button class="btn btn-primary" id="generate-pdf-btn">Export PDF</button>
+      </div>
+    </header>
+
+    <!-- ===== SETTINGS ===== -->
+    <aside class="panel" id="panel">
+      <section class="panel-section">
+        <h2 class="panel-title">Shape</h2>
+        <div class="segmented segmented-icons">
           <input type="radio" name="shape" id="shape-circle" value="circle" checked>
-          <label class="toggle-btn" for="shape-circle">Circle</label>
+          <label for="shape-circle" title="Circle"><svg class="shape-icon" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5"/></svg><span
+              class="visually-hidden">Circle</span></label>
 
           <input type="radio" name="shape" id="shape-square" value="square">
-          <label class="toggle-btn" for="shape-square">Square</label>
+          <label for="shape-square" title="Square"><svg class="shape-icon" viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="2" width="12" height="12" rx="2"/></svg><span
+              class="visually-hidden">Square</span></label>
 
           <input type="radio" name="shape" id="shape-hexagon" value="hexagon">
-          <label class="toggle-btn" for="shape-hexagon">Hexagon</label>
+          <label for="shape-hexagon" title="Hexagon"><svg class="shape-icon" viewBox="0 0 16 16" aria-hidden="true"><polygon points="8,1.5 13.6,4.75 13.6,11.25 8,14.5 2.4,11.25 2.4,4.75"/></svg><span
+              class="visually-hidden">Hexagon</span></label>
 
           <input type="radio" name="shape" id="shape-octagon" value="octagon">
-          <label class="toggle-btn" for="shape-octagon">Octagon</label>
+          <label for="shape-octagon" title="Octagon"><svg class="shape-icon" viewBox="0 0 16 16" aria-hidden="true"><polygon points="5.3,1.5 10.7,1.5 14.5,5.3 14.5,10.7 10.7,14.5 5.3,14.5 1.5,10.7 1.5,5.3"/></svg><span
+              class="visually-hidden">Octagon</span></label>
         </div>
+      </section>
 
-        <br>
-
-        <!-- Layout -->
-        <div class="section-title">Symbol Layout</div>
-        <div class="toggle-group" style="margin-bottom: 14px;">
+      <section class="panel-section">
+        <h2 class="panel-title">Layout</h2>
+        <div class="segmented">
           <input type="radio" name="layout" id="layout-ring" value="ring" checked>
-          <label class="toggle-btn" for="layout-ring">◎ Ring</label>
+          <label for="layout-ring">Ring</label>
 
           <input type="radio" name="layout" id="layout-grid" value="grid">
-          <label class="toggle-btn" for="layout-grid">▦ Grid</label>
+          <label for="layout-grid">Grid</label>
 
           <input type="radio" name="layout" id="layout-random" value="random">
-          <label class="toggle-btn" for="layout-random">✦ Random</label>
+          <label for="layout-random">Scatter</label>
         </div>
+      </section>
 
-        <!-- Random size and angle toggles -->
-        <div style="display: flex; gap: 16px;">
-          <!-- Size Column -->
-          <div style="flex: 1; display: flex; flex-direction: column;">
-            <div class="switch-row" style="margin: 0 0 12px 0;">
-              <span>Size</span>
-              <label class="switch">
-                <input type="checkbox" id="random-size">
-                <span class="slider"></span>
-              </label>
-            </div>
-            <div id="size-range-group" class="hidden">
-              <div class="control-group">
-                <label>Variance</label>
-                <input type="range" id="size-variance" min="0" max="25" step="1" value="25">
-                <div class="range-label"><span>0</span><span id="size-variance-val">25</span></div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Rotation Column -->
-          <div style="flex: 1; display: flex; flex-direction: column;">
-            <div class="switch-row" style="margin: 0 0 12px 0;">
-              <span>Rotation</span>
-              <label class="switch">
-                <input type="checkbox" id="random-angle">
-                <span class="slider"></span>
-              </label>
-            </div>
-            <div id="angle-range-group" class="hidden">
-              <div class="control-group">
-                <label>Max angle</label>
-                <input type="range" id="max-angle" min="10" max="180" step="10" value="180">
-                <div class="range-label"><span>10°</span><span id="max-angle-val">180°</span></div>
-              </div>
-            </div>
-          </div>
+      <section class="panel-section">
+        <h2 class="panel-title">Variation</h2>
+        <div class="slider-row">
+          <label for="size-variance">Size</label>
+          <input type="range" id="size-variance" min="0" max="25" step="1" value="0">
+          <output id="size-variance-val" for="size-variance">Off</output>
         </div>
-      </div>
-
-      <!-- Export -->
-      <div class="section">
-        <div class="section-title">Export</div>
-        <div style="display: flex; gap: 12px;">
-          <div class="control-group" style="flex: 1;">
-            <label for="page-size">Page size</label>
-            <select id="page-size">
-              <option value="a4">A4</option>
-              <option value="letter" selected>US Letter</option>
-            </select>
-          </div>
-          <div class="control-group" style="flex: 1;">
-            <label for="cards-per-row">Cards per row</label>
-            <select id="cards-per-row">
-              <option value="2">2</option>
-              <option value="3" selected>3</option>
-              <option value="4">4</option>
-            </select>
-          </div>
+        <div class="slider-row">
+          <label for="max-angle">Spin</label>
+          <input type="range" id="max-angle" min="0" max="180" step="10" value="0">
+          <output id="max-angle-val" for="max-angle">Off</output>
         </div>
-        <div class="switch-row" style="margin-top: 8px;">
-          <span>Bleed marks</span>
+        <div class="field-row">
+          <label for="seed-input">Seed</label>
+          <input type="number" id="seed-input" min="0" max="99999" step="1">
+        </div>
+      </section>
+
+      <section class="panel-section">
+        <h2 class="panel-title">Print</h2>
+        <div class="field-row">
+          <label for="page-size">Page</label>
+          <select id="page-size">
+            <option value="a4">A4</option>
+            <option value="letter" selected>US Letter</option>
+          </select>
+        </div>
+        <div class="field-row">
+          <label for="cards-per-row">Per row</label>
+          <select id="cards-per-row">
+            <option value="2">2</option>
+            <option value="3" selected>3</option>
+            <option value="4">4</option>
+          </select>
+        </div>
+        <div class="field-row">
+          <label for="bleed-marks">Bleed marks</label>
           <label class="switch">
             <input type="checkbox" id="bleed-marks" checked>
-            <span class="slider"></span>
+            <span class="switch-track"></span>
           </label>
         </div>
-        <button class="btn btn-primary" id="generate-pdf-btn" style="margin-top: 14px;">
-          📄 Download PDF
-        </button>
-      </div>
+      </section>
     </aside>
 
-    <!-- ===== MAIN ===== -->
+    <!-- ===== DECK ===== -->
     <main class="main">
+      <div id="error-msg" class="error-msg hidden" role="alert"></div>
+      <p id="match-hint" class="match-hint hidden" aria-live="polite"></p>
       <div id="card-grid"></div>
     </main>
   </div>

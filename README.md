@@ -25,10 +25,12 @@ This generator currently supports prime orders $n \in \{2, 3, 5, 7, 11, 13\}$.
 - **Layout Engines:**
   - **Ring:** Classic Spot It layout with a center symbol.
   - **Grid:** Orderly placement for clarity.
-  - **Random:** Poisson-disk sampling for a more organic feel.
+  - **Scatter:** Poisson-disk sampling for a more organic feel.
 - **Deep Customization:**
-  - Dynamic size variance sliders to normalize scaling.
-  - Granular symbol rotation bounds.
+  - Size variance and rotation sliders.
+  - Editable seed for reproducible decks.
+- **Find the Match:** Click any two cards to highlight the symbol they share.
+- **Light and Dark Modes:** Follows your system setting, with a manual toggle.
 - **High-Quality PDF Export:** Hardware-accelerated canvas rasterization generates incredibly crisp, print-ready PDFs (with optional bleed marks) while perfectly preserving complex system emojis without bloating file sizes.
 
 ## 🚀 Getting Started
@@ -47,7 +49,7 @@ The project is built with:
 dobble-mint/
 ├── index.html       # Main application shell
 ├── css/
-│   └── style.css    # Solarized Dark design system
+│   └── style.css    # Tabletop design system (light + dark)
 └── js/
     ├── math.js      # Projective plane construction engine
     ├── symbols.js   # Unicode/Emoji pool management
