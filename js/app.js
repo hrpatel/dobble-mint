@@ -23,6 +23,7 @@ const SpotItApp = (() => {
   let debounceTimer = null;
   let matchMode = false;
   let selected = [];
+  let preferredTheme = state.theme; // user's last explicit pick; restored when it fits again
 
   function newSeed() {
     return 1 + Math.floor(Math.random() * 99999);
@@ -53,7 +54,7 @@ const SpotItApp = (() => {
     // Theme
     populateThemes();
     document.getElementById('theme-select').addEventListener('change', e => {
-      state.theme = e.target.value;
+      state.theme = preferredTheme = e.target.value;
       scheduleUpdate();
     });
 
@@ -140,7 +141,8 @@ const SpotItApp = (() => {
     const needed = state.order * state.order + state.order + 1;
     const themes = SpotItSymbols.getThemes();
 
-    if (themes.find(t => t.key === state.theme).count < needed) state.theme = 'mixed';
+    const fits = themes.find(t => t.key === preferredTheme).count >= needed;
+    state.theme = fits ? preferredTheme : 'mixed';
 
     themeSel.innerHTML = '';
     themes.forEach(t => {
