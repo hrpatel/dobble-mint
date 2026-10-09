@@ -100,10 +100,6 @@ body.playing {
   -webkit-touch-callout: none;
 }
 
-.board[data-mode="duel"] {
-  --card: min(26dvh, 80vw);
-}
-
 .seat {
   display: flex;
   flex-direction: column;
@@ -139,9 +135,58 @@ body.playing {
   gap: 10px;
 }
 
+/*
+ * Duel: pile on the left, players' cards top-right and bottom-right. The circles interleave,
+ * so they can be larger than three stacked cards; play.js computes --card to fit.
+ */
+.board[data-mode="duel"] {
+  display: block;
+}
+
+.board[data-mode="duel"] .center-row,
+.board[data-mode="duel"] .seat {
+  position: absolute;
+}
+
 .board[data-mode="duel"] .center-row {
-  flex-direction: row;
-  gap: 16px;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.board[data-mode="duel"] .seat-top {
+  right: 12px;
+  top: max(12px, env(safe-area-inset-top));
+}
+
+.board[data-mode="duel"] .seat-bottom {
+  right: 12px;
+  bottom: max(12px, env(safe-area-inset-bottom));
+}
+
+/* Scores sit beside each card toward the open left side (seat-top is rotated: local right) */
+.board[data-mode="duel"] .seat-hud {
+  position: absolute;
+  bottom: 0;
+  white-space: nowrap;
+}
+
+.board[data-mode="duel"] .seat-bottom .seat-hud {
+  right: calc(100% + 8px);
+}
+
+.board[data-mode="duel"] .seat-top .seat-hud {
+  left: calc(100% + 8px);
+}
+
+.board[data-mode="duel"] .center-meta {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  white-space: nowrap; /* stays in the narrow strip left of the bottom player's card */
 }
 
 .hud {
@@ -175,11 +220,6 @@ body.playing {
   color: var(--ink-soft);
 }
 
-.board[data-mode="duel"] .center-meta {
-  flex-direction: column;
-  gap: 8px;
-}
-
 .pile-count {
   font-family: var(--font-serif);
   font-style: italic;
@@ -193,6 +233,9 @@ body.playing {
 }
 
 .seat-score {
+  display: inline-block;
+  min-width: 3ch; /* fixed width so play.js can reserve room for up to 3 digits */
+  text-align: right;
   font-size: 1.6rem;
   font-weight: 600;
   color: var(--ink);
@@ -209,6 +252,7 @@ body.playing {
   width: 100%;
   height: 100%;
   filter: var(--card-depth);
+  pointer-events: none; /* only halos take taps, so overlapping card boxes never block them */
 }
 
 /* The hidden halo doubles as a generous tap target around each emoji */
@@ -310,24 +354,21 @@ body.playing {
   100% { opacity: 0; transform: translateY(-14px); }
 }
 
-/* Wide screens: solo cards side by side */
-@media (orientation: landscape) and (min-width: 700px) {
-  .board[data-mode="solo"] {
-    --card: min(62dvh, 40vw);
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: 1fr;
-  }
+/* Solo side by side when play.js finds that gives bigger cards (wide screens) */
+.board[data-mode="solo"][data-layout="side"] {
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr;
+}
 
-  .board[data-mode="solo"] .center-row {
-    grid-column: 1;
-    grid-row: 1;
-  }
+.board[data-mode="solo"][data-layout="side"] .center-row {
+  grid-column: 1;
+  grid-row: 1;
+}
 
-  .board[data-mode="solo"] .seat-bottom {
-    grid-column: 2;
-    grid-row: 1;
-    align-self: center;
-  }
+.board[data-mode="solo"][data-layout="side"] .seat-bottom {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: center;
 }
 
 @media (prefers-reduced-motion: reduce) {

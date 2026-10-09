@@ -7,6 +7,7 @@ const SpotItPlay = (() => {
   const TOUCH = navigator.maxTouchPoints > 0 || matchMedia('(pointer: coarse)').matches;
   const MATCH_FLASH_MS = 350;
   const RESULTS_DELAY_MS = 600;
+  const CARD_GAP = 8; // px between cards and around HUD text
 
   // host: { getDeck() -> { key, settings, deck, symbols, cardSvgs } | null, setOrder(n), exit() }
   let host = null;
@@ -16,6 +17,7 @@ const SpotItPlay = (() => {
   let dealPrng = null;
   let game = null;
   let mode = 'solo';
+  let cardShape = 'circle';
   let rafId = 0;
   let isOpen = false;
 
@@ -131,6 +133,7 @@ const SpotItPlay = (() => {
       dealPrng = SpotItMath.makePRNG(d.settings.seed); // first deal reproducible from the link
       viewKey = d.key;
     }
+    cardShape = d.settings.shape;
     view.cardSvgs.forEach(svg => svg.querySelectorAll('.is-match').forEach(s => s.classList.remove('is-match')));
     ['p0', 'p1', 'center'].forEach(name => slot(name).replaceChildren());
     [0, 1].forEach(p => seat(p).classList.remove('locked'));
@@ -144,7 +147,46 @@ const SpotItPlay = (() => {
     document.body.classList.add('playing');
     $('penalty-toast').textContent = '';
     renderState();
+    layoutBoard();
     if (mode === 'solo') startTimer();
+  }
+
+  // ---------- Layout ----------
+
+  /** Size cards to the largest that fits the board for the current mode. */
+  function layoutBoard() {
+    if (!game) return;
+    const b = board();
+    const cs = getComputedStyle(b);
+    const w = b.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+    const h = b.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+    const size = mode === 'solo' ? soloCardSize(w, h) : duelCardSize(w, h);
+    b.style.setProperty('--card', `${Math.max(0, Math.floor(size))}px`);
+  }
+
+  /** Stack (pile above your card) or side by side, whichever gives bigger cards. */
+  function soloCardSize(w, h) {
+    const centerRow = board().querySelector('.center-row');
+    const rowGap = parseFloat(getComputedStyle(centerRow).rowGap) || 0;
+    const chrome = $('solo-hud').offsetHeight + board().querySelector('.center-meta').offsetHeight + 2 * rowGap;
+    const stack = Math.min(w, (h - chrome) / 2);
+    const side = Math.min(w / 2 - CARD_GAP, h - chrome);
+    board().dataset.layout = side > stack ? 'side' : 'stack';
+    return Math.max(stack, side);
+  }
+
+  /**
+   * Pile at left-middle, players at top-right and bottom-right. For circles, the largest
+   * diameter d makes the pile touch both players: (w-d)² + ((h-d)/2)² = d², which solves to
+   * d = 4w + h - 2√(3w² + 2wh). Hexagons and octagons sit inside that circle; squares cannot
+   * interleave, so they need clear rows or columns. Room is kept for the scores on the left.
+   */
+  function duelCardSize(w, h) {
+    const d = cardShape === 'square'
+      ? Math.min(w, h / 2, Math.max(w / 2, h / 3))
+      : Math.min(w, h / 2, 4 * w + h - 2 * Math.sqrt(3 * w * w + 2 * w * h));
+    const hudWidth = Math.max(...[0, 1].map(p => seat(p).querySelector('.seat-hud').offsetWidth));
+    return Math.min(d - CARD_GAP, w - hudWidth - 2 * CARD_GAP);
   }
 
   /** Place each card's SVG in its slot. Players first: the old center may move to a player. */
@@ -159,6 +201,8 @@ const SpotItPlay = (() => {
   }
 
   function bindBoard() {
+    new ResizeObserver(layoutBoard).observe(board());
+
     // pointerdown (not click): lower latency and lets two players tap at the same time
     board().addEventListener('pointerdown', e => {
       if (!game) return;

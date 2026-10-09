@@ -685,6 +685,19 @@ input[type="range"]::-moz-range-thumb {
   }
 }
 
+/* Phones: two rows of actions so labels never overflow their buttons */
+@media (max-width: 600px) {
+  .topbar-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 8px;
+  }
+
+  .topbar-actions .btn-primary {
+    grid-column: span 2;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     transition: none !important;
