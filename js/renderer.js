@@ -50,13 +50,13 @@ const SpotItRenderer = (() => {
       case 'circle':
         return el('circle', {
           cx: CENTER, cy: CENTER, r: RADIUS,
-          fill: 'white', stroke: '#334155', 'stroke-width': 3,
+          fill: 'white', stroke: '#23463c', 'stroke-width': 3,
         });
       case 'square':
         return el('rect', {
           x: CENTER - RADIUS, y: CENTER - RADIUS,
           width: RADIUS * 2, height: RADIUS * 2, rx: 16, ry: 16,
-          fill: 'white', stroke: '#334155', 'stroke-width': 3,
+          fill: 'white', stroke: '#23463c', 'stroke-width': 3,
         });
       case 'hexagon':
       case 'octagon': {
@@ -68,7 +68,7 @@ const SpotItRenderer = (() => {
         }
         return el('polygon', {
           points: pts.join(' '),
-          fill: 'white', stroke: '#334155', 'stroke-width': 3,
+          fill: 'white', stroke: '#23463c', 'stroke-width': 3,
         });
       }
     }
@@ -209,7 +209,7 @@ const SpotItRenderer = (() => {
     const { shape = 'circle', layout = 'ring', randomSize = false, sizeRange = [0.6, 1.4], randomAngle = false, maxAngle = 45 } = options;
 
     const svg = el('svg', {
-      xmlns: NS, viewBox: `0 0 ${CARD_SIZE} ${CARD_SIZE}`,
+      xmlns: NS, class: 'card', viewBox: `0 0 ${CARD_SIZE} ${CARD_SIZE}`,
       width: CARD_SIZE, height: CARD_SIZE,
     });
 
@@ -254,8 +254,15 @@ const SpotItRenderer = (() => {
 
       // Use a group for rotation/scaling for better browser compatibility
       const symbolG = el('g', {
+        class: 'symbol',
+        'data-symbol': symbols[i],
         transform: `translate(${pos.x}, ${pos.y}) rotate(${angle})`
       });
+
+      // Match-mode highlight; hidden by default so exports never show it
+      symbolG.appendChild(el('circle', {
+        class: 'symbol-halo', r: Math.round(finalSize * 0.7), visibility: 'hidden',
+      }));
 
       const text = el('text', {
         x: 0, y: 0,

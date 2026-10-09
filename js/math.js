@@ -101,5 +101,23 @@ const SpotItMath = (() => {
     };
   }
 
-  return { buildDeck, verify, makePRNG, SUPPORTED_ORDERS, isPrime };
+  /** In-place Fisher-Yates shuffle driven by `prng`. Returns `arr`. */
+  function shuffle(arr, prng) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(prng() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  /**
+   * Return a copy of `deck` with card order and per-card symbol order shuffled.
+   * The raw construction groups cards that share symbol 0 first, which reads as a bug.
+   */
+  function shuffleDeck(deck, prng) {
+    const cards = shuffle(deck.cards.map(card => shuffle([...card], prng)), prng);
+    return { ...deck, cards };
+  }
+
+  return { buildDeck, verify, makePRNG, shuffle, shuffleDeck, SUPPORTED_ORDERS, isPrime };
 })();
