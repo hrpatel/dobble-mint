@@ -8,6 +8,9 @@ const SpotItPlay = (() => {
   const MATCH_FLASH_MS = 350;
   const RESULTS_DELAY_MS = 600;
   const CARD_GAP = 8; // px between cards and around HUD text
+  const MIN_PLAYERS = 2;
+  const MAX_PLAYERS = 6;
+  const NAME_MAX = 16;
 
   // host: { getDeck() -> { key, settings, deck, symbols, cardSvgs } | null, setOrder(n), exit() }
   let host = null;
@@ -17,6 +20,8 @@ const SpotItPlay = (() => {
   let dealPrng = null;
   let game = null;
   let mode = 'solo';
+  let names = ['Player 1', 'Player 2']; // pass-and-play roster, kept in sync with the inputs
+  let series = null; // pass-and-play run: { seed, turn, results: [{ name, totalMs, stats }] }
   let cardShape = 'circle';
   let rafId = 0;
   let isOpen = false;
@@ -25,6 +30,7 @@ const SpotItPlay = (() => {
   const board = () => $('board');
   const slot = name => board().querySelector(`[data-slot="${name}"]`);
   const seat = player => board().querySelector(`[data-seat="${player}"]`);
+  const isDuel = () => mode === 'duel';
 
   function init(h) {
     host = h;
@@ -45,6 +51,7 @@ const SpotItPlay = (() => {
     isOpen = false;
     stopTimer();
     game = null;
+    series = null;
     document.body.classList.remove('playing');
     $('play-view').classList.add('hidden');
   }
@@ -65,7 +72,16 @@ const SpotItPlay = (() => {
     });
 
     document.querySelectorAll('input[name="mode"]').forEach(inp => {
-      inp.addEventListener('change', e => { mode = e.target.value; syncBest(); });
+      inp.addEventListener('change', e => {
+        mode = e.target.value;
+        $('players-field').classList.toggle('hidden', mode !== 'pass');
+        syncBest();
+      });
+    });
+    renderPlayers();
+    $('add-player').addEventListener('click', () => {
+      if (names.length < MAX_PLAYERS) names.push(`Player ${names.length + 1}`);
+      renderPlayers();
     });
     if (!TOUCH) {
       $('mode-duel').disabled = true;
@@ -79,6 +95,39 @@ const SpotItPlay = (() => {
     $('again-btn').addEventListener('click', startGame);
     $('menu-btn').addEventListener('click', showMenu);
     $('quit-btn').addEventListener('click', showMenu);
+    $('handoff-quit-btn').addEventListener('click', showMenu);
+    $('pause-quit-btn').addEventListener('click', showMenu);
+    $('pause-btn').addEventListener('click', () => setPaused(true));
+    $('resume-btn').addEventListener('click', () => setPaused(false));
+    $('ready-btn').addEventListener('click', () => beginGame(SpotItMath.makePRNG(series.seed)));
+    // Switching tabs would otherwise let someone study the cards on a running clock
+    document.addEventListener('visibilitychange', () => { if (document.hidden) setPaused(true); });
+  }
+
+  /** Rebuild the roster inputs from `names`. */
+  function renderPlayers() {
+    const items = names.map((name, i) => {
+      const li = document.createElement('li');
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.value = name;
+      input.maxLength = NAME_MAX;
+      input.setAttribute('aria-label', `Player ${i + 1} name`);
+      input.addEventListener('input', () => { names[i] = input.value; });
+      li.appendChild(input);
+      if (names.length > MIN_PLAYERS) {
+        const rm = document.createElement('button');
+        rm.type = 'button';
+        rm.className = 'btn btn-icon';
+        rm.textContent = '✕';
+        rm.setAttribute('aria-label', `Remove player ${i + 1}`);
+        rm.addEventListener('click', () => { names.splice(i, 1); renderPlayers(); });
+        li.appendChild(rm);
+      }
+      return li;
+    });
+    $('player-list').replaceChildren(...items);
+    $('add-player').classList.toggle('hidden', names.length >= MAX_PLAYERS);
   }
 
   function readBest(cards) {
@@ -97,6 +146,9 @@ const SpotItPlay = (() => {
   function showMenu() {
     stopTimer();
     game = null;
+    series = null;
+    $('pause-overlay').classList.add('hidden');
+    $('handoff').classList.add('hidden');
     board().classList.add('hidden');
     $('results').classList.add('hidden');
     $('start-screen').classList.remove('hidden');
@@ -120,6 +172,7 @@ const SpotItPlay = (() => {
     return copy;
   }
 
+  /** Start or Play again: set up the deck, then deal now or open the pass-and-play series. */
   function startGame() {
     const d = host.getDeck();
     if (!d) {
@@ -134,21 +187,93 @@ const SpotItPlay = (() => {
       viewKey = d.key;
     }
     cardShape = d.settings.shape;
+    $('start-screen').classList.add('hidden');
+    $('results').classList.add('hidden');
+
+    if (mode === 'pass') {
+      // One seed for the series so every player gets the identical deal
+      series = { seed: Math.floor(dealPrng() * 2 ** 31), turn: 0, results: [] };
+      names = names.map((n, i) => n.trim() || `Player ${i + 1}`);
+      renderPlayers();
+      showHandoff();
+    } else {
+      beginGame(dealPrng);
+    }
+  }
+
+  /** Deal and show the board. Pass-and-play calls this once per turn. */
+  function beginGame(prng) {
     view.cardSvgs.forEach(svg => svg.querySelectorAll('.is-match').forEach(s => s.classList.remove('is-match')));
     ['p0', 'p1', 'center'].forEach(name => slot(name).replaceChildren());
     [0, 1].forEach(p => seat(p).classList.remove('locked'));
 
-    game = SpotItGame.create(view.deck.cards, mode, dealPrng, performance.now());
+    game = SpotItGame.create(view.deck.cards, mode, prng, performance.now());
 
-    board().dataset.mode = mode;
-    $('start-screen').classList.add('hidden');
-    $('results').classList.add('hidden');
+    board().dataset.mode = isDuel() ? 'duel' : 'solo'; // pass-and-play lays out like solo
+    $('handoff').classList.add('hidden');
     board().classList.remove('hidden');
     document.body.classList.add('playing');
     $('penalty-toast').textContent = '';
     renderState();
     layoutBoard();
-    if (mode === 'solo') startTimer();
+    if (!isDuel()) startTimer();
+  }
+
+  function setPaused(on) {
+    if (!game || game.finishedAt !== null || board().classList.contains('hidden')) return;
+    if (on) SpotItGame.pause(game, performance.now());
+    else SpotItGame.resume(game, performance.now());
+    $('pause-overlay').classList.toggle('hidden', !on);
+    if (on) $('resume-btn').focus();
+  }
+
+  // ---------- Pass-and-play ----------
+
+  function showHandoff() {
+    const last = series.results.at(-1);
+    $('handoff-prev').textContent = last ? `${last.name} finished in ${formatTime(last.totalMs)}.` : '';
+    $('handoff-turn').textContent = `Turn ${series.turn + 1} of ${names.length}`;
+    $('handoff-name').textContent = names[series.turn];
+    board().classList.add('hidden');
+    document.body.classList.remove('playing');
+    $('handoff').classList.remove('hidden');
+  }
+
+  /** Record a finished turn; hand off to the next player or show the leaderboard. */
+  function finishTurn(s) {
+    series.results.push({ name: names[series.turn], totalMs: s.totalMs, stats: s.stats });
+    series.turn++;
+    if (series.turn < names.length) showHandoff();
+    else showLeaderboard();
+  }
+
+  function showLeaderboard() {
+    const rows = SpotItGame.leaderboard(series.results);
+    const list = document.createElement('ol');
+    list.className = 'leaderboard';
+    rows.forEach(r => {
+      const li = document.createElement('li');
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'leaderboard-row';
+      btn.textContent = `${r.rank}. ${r.name} · ${formatTime(r.totalMs)}`;
+      btn.addEventListener('click', () => showStats(r.stats, `${r.name}'s stats`));
+      li.appendChild(btn);
+      list.appendChild(li);
+    });
+    const top = rows.filter(r => r.rank === 1);
+    const verb = top.length > 1 ? 'tie!' : 'wins!';
+    fillResult($('result-0'), `${top.map(r => r.name).join(' & ')} ${verb}`, []);
+    $('result-0').appendChild(list);
+    $('results').dataset.mode = 'solo';
+    showStats(rows[0].stats, `${rows[0].name}'s stats`);
+    $('results').classList.remove('hidden');
+  }
+
+  function showStats(stats, title) {
+    $('stats-summary').textContent = title;
+    SpotItStats.render($('stats-body'), stats);
+    $('stats').classList.toggle('hidden', !stats.cards.length);
   }
 
   // ---------- Layout ----------
@@ -160,7 +285,7 @@ const SpotItPlay = (() => {
     const cs = getComputedStyle(b);
     const w = b.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
     const h = b.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
-    const size = mode === 'solo' ? soloCardSize(w, h) : duelCardSize(w, h);
+    const size = isDuel() ? duelCardSize(w, h) : soloCardSize(w, h);
     b.style.setProperty('--card', `${Math.max(0, Math.floor(size))}px`);
   }
 
@@ -219,8 +344,8 @@ const SpotItPlay = (() => {
   /** Solo may tap either card; in a duel each player taps only their own. */
   function playerForSlot(name) {
     if (name === 'p0') return 0;
-    if (name === 'p1') return mode === 'duel' ? 1 : null;
-    return mode === 'solo' ? 0 : null;
+    if (name === 'p1') return isDuel() ? 1 : null;
+    return isDuel() ? null : 0;
   }
 
   function handleClaim(player, symbol) {
@@ -291,7 +416,7 @@ const SpotItPlay = (() => {
 
   function stopTimer() {
     cancelAnimationFrame(rafId);
-    if (game && mode === 'solo') $('timer').textContent = formatTime(SpotItGame.summary(game, performance.now()).totalMs);
+    if (game && !isDuel()) $('timer').textContent = formatTime(SpotItGame.summary(game, performance.now()).totalMs);
   }
 
   function fillResult(el, title, lines) {
@@ -309,6 +434,7 @@ const SpotItPlay = (() => {
     const s = SpotItGame.summary(game, performance.now());
     const cards = game.cards.length;
     const results = $('results');
+    if (mode === 'pass') { finishTurn(s); return; }
     results.dataset.mode = mode;
 
     if (mode === 'solo') {
@@ -329,6 +455,7 @@ const SpotItPlay = (() => {
         ]);
       });
     }
+    showStats(s.stats, 'Stats');
     results.classList.remove('hidden');
   }
 

@@ -117,3 +117,120 @@ test('programmer errors fail fast', () => {
   const game = newGame('solo');
   assert.throws(() => SpotItGame.claim(game, 1, 0, 0), /No player 1/);
 });
+
+// ---------- Pause ----------
+
+test('paused time is excluded from elapsed time', () => {
+  const game = newGame('solo', { now: 1000 });
+  SpotItGame.pause(game, 2000);
+  assert.equal(SpotItGame.summary(game, 5000).elapsedMs, 1000); // frozen while paused
+  SpotItGame.resume(game, 7000);
+  assert.equal(SpotItGame.summary(game, 7500).elapsedMs, 1500);
+});
+
+test('claims are ignored while paused, and pause/resume are idempotent', () => {
+  const game = newGame('solo');
+  SpotItGame.pause(game, 100);
+  SpotItGame.pause(game, 200); // keeps the first pause time
+  assert.equal(SpotItGame.claim(game, 0, target(game, 0), 300).result, 'paused');
+  assert.equal(game.players[0].won, 0);
+  SpotItGame.resume(game, 1100);
+  SpotItGame.resume(game, 1200); // no-op
+  assert.equal(SpotItGame.summary(game, 1100).elapsedMs, 100);
+  assert.equal(SpotItGame.claim(game, 0, target(game, 0), 1100).result, 'match');
+});
+
+test('pausing does not shorten or extend a duel lockout', () => {
+  const game = newGame('duel');
+  SpotItGame.claim(game, 0, wrong(game, 0), 1000); // locked until 2000
+  SpotItGame.pause(game, 1500);
+  SpotItGame.resume(game, 11500); // 10 s paused
+  assert.equal(SpotItGame.claim(game, 0, target(game, 0), 11999).result, 'locked'); // 500 ms left at resume
+  assert.equal(SpotItGame.claim(game, 0, target(game, 0), 12000).result, 'match');
+});
+
+test('cannot pause a finished game', () => {
+  const game = newGame('duel', { order: 2 });
+  while (game.finishedAt === null) SpotItGame.claim(game, 0, target(game, 0), 10);
+  SpotItGame.pause(game, 20);
+  assert.equal(game.pausedAt, null);
+});
+
+// ---------- Stats ----------
+
+test('claims are logged with active time, excluding paused time', () => {
+  const game = newGame('solo', { now: 1000 });
+  SpotItGame.claim(game, 0, wrong(game, 0), 1200);
+  SpotItGame.pause(game, 1500);
+  SpotItGame.resume(game, 3500);
+  SpotItGame.claim(game, 0, target(game, 0), 4000);
+  assert.deepEqual(plain(game.log.map(({ player, result, t }) => ({ player, result, t }))), [
+    { player: 0, result: 'wrong', t: 200 },
+    { player: 0, result: 'match', t: 1000 },
+  ]);
+});
+
+test('stats give per-card time (with wrong-tap penalty), fastest, and slowest', () => {
+  const game = newGame('solo', { order: 3, now: 0 });
+  let t = 0;
+  const gaps = [3000, 500, 1000];
+  gaps.forEach((gap, i) => {
+    if (i === 2) SpotItGame.claim(game, 0, wrong(game, 0), t + 100); // one wrong on card 3
+    t += gap;
+    SpotItGame.claim(game, 0, target(game, 0), t);
+  });
+  const { stats } = SpotItGame.summary(game, t);
+  assert.deepEqual(plain(stats.cards.map(c => c.ms)), [3000, 500, 3000]); // 1000 + 2000 penalty
+  assert.deepEqual(plain(stats.cards.map(c => c.wrong)), [0, 0, 1]);
+  assert.equal(stats.wrongTaps, 1);
+  assert.equal(stats.fastest.ms, 500);
+  assert.equal(stats.slowest.ms, 3000);
+  assert.equal(stats.averageMs, 2166.6666666666665);
+});
+
+test('duel stats attribute each card to the player who won it', () => {
+  const game = newGame('duel', { order: 3 });
+  SpotItGame.claim(game, 1, target(game, 1), 400);
+  SpotItGame.claim(game, 0, target(game, 0), 1000);
+  const { stats } = SpotItGame.summary(game, 1000);
+  assert.deepEqual(plain(stats.cards.map(c => [c.player, c.ms])), [[1, 400], [0, 600]]);
+});
+
+test('stats are empty before the first card is won', () => {
+  const { stats } = SpotItGame.summary(newGame('solo'), 0);
+  assert.deepEqual(plain(stats.cards), []);
+  assert.equal(stats.fastest, null);
+  assert.equal(stats.averageMs, 0);
+});
+
+test('histogram buckets values into equal-width bins', () => {
+  assert.deepEqual(plain(SpotItGame.histogram([0, 1, 2, 3, 4, 10], 2)), [5, 1]);
+  assert.deepEqual(plain(SpotItGame.histogram([5, 5], 3)), [2, 0, 0]); // zero spread
+  assert.deepEqual(plain(SpotItGame.histogram([], 3)), [0, 0, 0]);
+});
+
+// ---------- Pass-and-play ----------
+
+test('pass mode is a one-player game with solo penalties', () => {
+  const game = newGame('pass');
+  assert.equal(game.players.length, 1);
+  assert.equal(SpotItGame.claim(game, 0, wrong(game, 0), 0).result, 'wrong');
+  assert.equal(SpotItGame.summary(game, 0).penaltyMs, 2000);
+});
+
+test('the same seed gives every pass-and-play turn the identical deal', () => {
+  const a = newGame('pass', { order: 5, seed: 9 });
+  const b = newGame('pass', { order: 5, seed: 9 });
+  assert.deepEqual(plain(a.pile), plain(b.pile));
+  assert.equal(a.center, b.center);
+});
+
+test('leaderboard ranks by lowest total time, ties share a rank', () => {
+  const rows = SpotItGame.leaderboard([
+    { name: 'Ana', totalMs: 30000 },
+    { name: 'Bo', totalMs: 25000 },
+    { name: 'Cy', totalMs: 30000 },
+    { name: 'Di', totalMs: 41000 },
+  ]);
+  assert.deepEqual(plain(rows.map(r => [r.rank, r.name])), [[1, 'Bo'], [2, 'Ana'], [2, 'Cy'], [4, 'Di']]);
+});

@@ -14,15 +14,6 @@ Improvements considered but not yet implemented.
 - **Online two-player.** Both devices open the same deck link, so only claims need sending.
   GitHub Pages has no server: use WebRTC (e.g. PeerJS, paired by QR code) with one device as
   referee to settle who tapped first.
-- **Pause button.** Pause during play: cover the cards so nobody can study them, ignore taps,
-  and stop the solo timer. `game.js` would track paused time so `summary()` excludes it and
-  duel lockouts resume where they left off.
-- **Pass-and-play time trial.** Two or more players take turns playing solo on one device; the
-  lowest total time wins. Deal every turn from the same seed so each player gets the identical
-  deal, then show a leaderboard of names and times.
-- **Advanced stats.** After a game, show how long each card took, the distribution of those
-  times, fastest and slowest cards, and wrong taps. Needs `game.js` to log each claim
-  (timestamp, player, result) so `summary()` can derive the stats.
 - **Points or time scoring.** Let players choose how a game is scored: by time, or by points
   for each card won. Points follow the same rules as time, e.g. a deduction for each wrong tap.
   Fits as a per-mode setting next to `penaltyMs` in `MODES`.

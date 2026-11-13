@@ -17,6 +17,7 @@ https://hrpatel.github.io/dobble-mint/.
 - Single test: `node --test --test-name-pattern="locks only" "tests/*.test.js"`
 
 Tests cover the DOM-free modules (`math.js`, `symbols.js`, `deck.js` parse/serialize, `game.js`).
+`stats.js` and `play.js` are DOM code and are checked by hand in a browser.
 `tests/load.js` runs the browser scripts in a shared `vm` context; wrap values from it in
 `plain()` before `deepStrictEqual`, since VM-realm arrays fail cross-realm prototype checks.
 
@@ -24,7 +25,7 @@ Tests cover the DOM-free modules (`math.js`, `symbols.js`, `deck.js` parse/seria
 
 Each file in `js/` is a classic script exposing one global IIFE module. No ES modules, so
 **load order matters**: `math.js` → `symbols.js` → `renderer.js` → `deck.js` → `pdf.js` →
-`game.js` → `play.js` → `app.js` (last: it initializes `SpotItPlay` and routes).
+`game.js` → `stats.js` → `play.js` → `app.js` (last: it initializes `SpotItPlay` and routes).
 
 - `SpotItMath` (`math.js`): builds the finite projective plane PG(2,n) for prime n. Points
   become symbols and lines become cards, so any two cards share exactly one symbol. Cards are
@@ -46,12 +47,22 @@ Each file in `js/` is a classic script exposing one global IIFE module. No ES mo
   `cardSvgs` (used for PDF). Themes too small for the chosen order are disabled.
 - `SpotItGame` (`game.js`): "The Tower" rules with no DOM access. `create()` deals with a seeded
   PRNG, `claim(game, player, symbol, now)` returns `match | wrong | locked | over`, and
-  `summary()` feeds the HUD. Modes: `solo` (2 s penalty per wrong tap) and `duel` (1 s lockout).
-  Duel cannot tie: n²+n+1 cards minus 2 in hand is always odd.
+  `summary()` feeds the HUD. Modes: `solo` (2 s penalty per wrong tap), `duel` (1 s lockout),
+  and `pass` (solo rules, one player per game). Duel cannot tie: n²+n+1 cards minus 2 in hand
+  is always odd. `pause()`/`resume()` exclude paused time from `summary()` and shift duel
+  lockouts; `claim()` returns `paused` meanwhile. Every claim lands in `game.log` (timestamp
+  in play time), and `summary().stats` (lazy) derives per-card times, fastest/slowest, and
+  wrong taps. A card's time includes the solo penalty for its wrong taps. `histogram()` and
+  `leaderboard()` are pure helpers.
+- `SpotItStats` (`stats.js`): renders `summary().stats` as facts plus two SVG bar charts
+  (time per card, spread of times) into the results screen's `<details>`.
 - `SpotItPlay` (`play.js`): game view. `app.js` passes a host (`getDeck`, `setOrder`, `exit`);
   the game clones the designer's card SVGs (renaming `clip-N` to `play-clip-N`, since a
   duplicate id would resolve to the hidden designer copy), moves clones between slots, maps
-  `pointerdown` on a symbol's halo to `claim()`, and stores solo best times in `localStorage`
+  `pointerdown` on a symbol's halo to `claim()`, pauses behind an opaque overlay (also when the
+  tab is hidden), runs Pass & Play (a roster of 2-6, a hand-off screen before each turn, the
+  same deal every turn from one seed drawn from the deal PRNG, then a leaderboard whose rows
+  switch the stats shown; the board lays out as solo), and stores solo best times in `localStorage`
   (`dm-best-<cards>`). Two-player is offered only on touch devices; the top seat is rotated
   180° for a device lying flat between players.
 
