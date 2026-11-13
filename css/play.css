@@ -93,6 +93,37 @@ body.playing {
   color: var(--accent);
 }
 
+/* ---------- Pass & Play roster and hand-off ---------- */
+.player-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.player-list li {
+  display: flex;
+  gap: 8px;
+}
+
+.player-list input {
+  flex: 1;
+  min-width: 0;
+  height: 36px;
+  padding: 0 10px;
+  font: inherit;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--recessed);
+}
+
+.handoff-panel {
+  text-align: center;
+}
+
 /* ---------- Board ---------- */
 .board {
   --card: min(34dvh, 88vw);
@@ -282,8 +313,25 @@ body.playing {
   filter: grayscale(0.8);
 }
 
+/* ---------- Pause ---------- */
+/* Opaque so nobody can study the cards while the clock is stopped */
+.pause-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 20px;
+  text-align: center;
+  background: var(--bg);
+}
+
 /* ---------- Results ---------- */
 .results {
+  overflow-y: auto;
   position: fixed;
   inset: 0;
   z-index: 20;
@@ -299,7 +347,7 @@ body.playing {
 
 .results[data-mode="solo"] {
   grid-template-rows: auto auto;
-  align-content: center;
+  align-content: safe center; /* stats can make the page taller than the screen */
 }
 
 .results[data-mode="solo"] .result-top {
@@ -343,7 +391,105 @@ body.playing {
 
 .result-actions {
   display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.result-buttons {
+  display: flex;
   gap: 10px;
+}
+
+.leaderboard {
+  list-style: none;
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.leaderboard-row {
+  width: 100%;
+  padding: 6px 10px;
+  font: inherit;
+  color: var(--ink);
+  background: none;
+  border: 0;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-variant-numeric: tabular-nums;
+}
+
+.leaderboard-row:hover {
+  background: var(--accent-soft);
+}
+
+/* ---------- Stats ---------- */
+.stats {
+  width: min(320px, 90vw);
+  color: var(--ink-soft);
+}
+
+.stats summary {
+  text-align: center;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.stats-body {
+  margin-top: 10px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+}
+
+.stat-facts {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-facts dd {
+  color: var(--ink);
+  font-weight: 600;
+  text-align: right;
+}
+
+.stat-figure figcaption {
+  font-family: var(--font-serif);
+  font-size: 0.95rem;
+  margin-bottom: 4px;
+}
+
+.stat-chart {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.stat-bar {
+  fill: var(--ink-muted);
+}
+
+.stat-bar.is-wrong {
+  fill: var(--error);
+}
+
+.stat-bar.p1:not(.is-wrong) {
+  fill: var(--accent);
+}
+
+.stat-axis {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--ink-muted);
 }
 
 /* ---------- Motion ---------- */

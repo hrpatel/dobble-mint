@@ -164,8 +164,16 @@
           <label for="mode-solo">Solo</label>
           <input type="radio" name="mode" id="mode-duel" value="duel">
           <label for="mode-duel">2 Players</label>
+          <input type="radio" name="mode" id="mode-pass" value="pass">
+          <label for="mode-pass">Pass &amp; Play</label>
         </div>
         <p class="start-note" id="mode-note"></p>
+
+        <div class="players hidden" id="players-field">
+          <p class="start-note">Each player takes a turn on the same deal. Lowest time wins.</p>
+          <ul class="player-list" id="player-list"></ul>
+          <button class="btn btn-ghost" id="add-player" type="button">Add player</button>
+        </div>
 
         <div class="field-row">
           <label for="play-order">Deck</label>
@@ -177,6 +185,18 @@
         <button class="btn btn-primary btn-large" id="start-btn">Start</button>
         <a class="start-edit" id="edit-link" href="./">Edit this deck</a>
         <p id="play-error" class="error-msg hidden" role="alert"></p>
+      </section>
+    </section>
+
+    <!-- ===== PASS & PLAY HAND-OFF ===== -->
+    <section id="handoff" class="start hidden" aria-live="polite">
+      <section class="start-panel handoff-panel">
+        <p class="start-note" id="handoff-prev"></p>
+        <p class="start-note" id="handoff-turn"></p>
+        <h1 class="start-title" id="handoff-name"></h1>
+        <p class="start-rules">Pass the device. The clock starts when you tap Ready.</p>
+        <button class="btn btn-primary btn-large" id="ready-btn">Ready</button>
+        <button class="btn btn-ghost" id="handoff-quit-btn">Quit</button>
       </section>
     </section>
 
@@ -195,6 +215,7 @@
         <div class="slot slot-center" data-slot="center"></div>
         <div class="center-meta">
           <span class="pile-count"><span id="cards-left">0</span> left</span>
+          <button class="btn btn-icon" id="pause-btn" title="Pause" aria-label="Pause">⏸</button>
           <button class="btn btn-icon" id="quit-btn" title="Quit game" aria-label="Quit game">✕</button>
         </div>
       </div>
@@ -203,14 +224,27 @@
         <div class="slot" data-slot="p0"></div>
         <div class="seat-hud"><span class="seat-score" id="score-0">0</span> cards</div>
       </div>
+
+      <div id="pause-overlay" class="pause-overlay hidden" role="dialog" aria-label="Paused">
+        <h2 class="result-title">Paused</h2>
+        <p class="start-note">The clock is stopped and the cards are hidden.</p>
+        <button class="btn btn-primary btn-large" id="resume-btn">Resume</button>
+        <button class="btn btn-ghost" id="pause-quit-btn">Quit game</button>
+      </div>
     </section>
 
     <!-- ===== RESULTS ===== -->
     <section id="results" class="results hidden" aria-live="polite">
       <div class="result-card result-top" id="result-1"></div>
       <div class="result-actions">
-        <button class="btn btn-primary" id="again-btn">Play again</button>
-        <button class="btn btn-ghost" id="menu-btn">Menu</button>
+        <div class="result-buttons">
+          <button class="btn btn-primary" id="again-btn">Play again</button>
+          <button class="btn btn-ghost" id="menu-btn">Menu</button>
+        </div>
+        <details class="stats hidden" id="stats">
+          <summary id="stats-summary">Stats</summary>
+          <div class="stats-body" id="stats-body"></div>
+        </details>
       </div>
       <div class="result-card" id="result-0"></div>
     </section>
@@ -228,6 +262,7 @@
   <script src="js/deck.js"></script>
   <script src="js/pdf.js"></script>
   <script src="js/game.js"></script>
+  <script src="js/stats.js"></script>
   <script src="js/play.js"></script>
   <script src="js/app.js"></script>
 </body>
