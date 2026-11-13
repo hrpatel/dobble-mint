@@ -71,6 +71,7 @@ dobble-mint/
 ├── js/
 │   ├── math.js      # Projective plane construction engine
 │   ├── symbols.js   # Unicode/Emoji pool management
+│   ├── openmoji.js  # Generated OpenMoji symbol artwork (CC BY-SA 4.0)
 │   ├── renderer.js  # SVG card rendering logic
 │   ├── deck.js      # Shared deck settings, URL format, and deck building
 │   ├── pdf.js       # PDF assembly and export
@@ -78,6 +79,7 @@ dobble-mint/
 │   ├── game.js      # Game rules (no DOM)
 │   ├── stats.js     # Results-screen stats and charts
 │   └── play.js      # Game view UI
+├── scripts/         # build-openmoji.js regenerates js/openmoji.js
 └── tests/           # Node unit tests (node --test)
 ```
 
@@ -86,3 +88,8 @@ Ideas and bugs are tracked in [GitHub issues](https://github.com/hrpatel/dobble-
 ## 📝 License
 
 MIT License - feel free to use and modify for your own game nights!
+
+Symbol artwork in `js/openmoji.js` is from [OpenMoji](https://openmoji.org), the open-source
+emoji and icon project, licensed under
+[CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/). Exported PDFs credit it on
+the last page.

@@ -6,6 +6,7 @@
 
 const SpotItPDF = (() => {
   const RASTER_SCALE = 3; // 3x for crisp print quality
+  const PRINT_SAFE = 8; // mm from the page edge most printers can reach
 
   /**
    * Convert an SVG element to a JPEG data URL via canvas.
@@ -46,7 +47,7 @@ const SpotItPDF = (() => {
   /**
    * Generate a PDF from rendered card SVG elements.
    * @param {SVGElement[]} cardSvgs — array of SVG elements
-   * @param {object} options — { pageSize, cardsPerRow, margin, bleedMarks }
+   * @param {object} options — { pageSize, cardsPerRow, margin, bleedMarks, credit }
    */
   async function generatePDF(cardSvgs, options = {}) {
     const {
@@ -54,6 +55,7 @@ const SpotItPDF = (() => {
       cardsPerRow = 1,
       margin = 5, // mm
       bleedMarks = true,
+      credit = '',
     } = options;
 
     const jsPDFLib = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
@@ -118,6 +120,21 @@ const SpotItPDF = (() => {
         doc.line(bx + cardMM, by + cardMM, bx + cardMM - markLen, by + cardMM);
         doc.line(bx + cardMM, by + cardMM, bx + cardMM, by + cardMM - markLen);
       }
+    }
+
+    // Artwork attribution, one line under the last card; a new page if it would be unprintable
+    if (credit && images.length) {
+      const last = (images.length - 1) % cardsPerPage;
+      let x = margin + (last % cardsPerRow + 0.5) * cardMM;
+      let y = margin + (Math.floor(last / cardsPerRow) + 1) * cardMM + 3;
+      if (y > pageH - PRINT_SAFE) {
+        doc.addPage();
+        x = pageW / 2;
+        y = margin + 3;
+      }
+      doc.setFontSize(6);
+      doc.setTextColor(120);
+      doc.text(credit, x, y, { align: 'center', baseline: 'middle' });
     }
 
     doc.save('dobble-mint-cards.pdf');

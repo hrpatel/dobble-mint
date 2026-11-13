@@ -370,6 +370,8 @@ const SpotItApp = (() => {
     hint.textContent = `Cards ${label(a)} and ${label(b)} share ${glyph}. Pick another card to start over.`;
   }
 
+  const OPENMOJI_CREDIT = 'Symbol art: OpenMoji (openmoji.org), CC BY-SA 4.0';
+
   async function handleGeneratePDF() {
     const btn = document.getElementById('generate-pdf-btn');
     btn.disabled = true;
@@ -381,6 +383,7 @@ const SpotItApp = (() => {
         cardsPerRow: state.cardsPerRow,
         margin: state.margin,
         bleedMarks: state.bleedMarks,
+        credit: symbols.some(g => SpotItOpenMoji.has(g)) ? OPENMOJI_CREDIT : '',
       });
     } catch (e) {
       showError('PDF generation failed: ' + e.message);

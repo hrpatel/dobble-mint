@@ -16,15 +16,15 @@ https://hrpatel.github.io/dobble-mint/.
 - Unit tests (Node's built-in runner, no install): `node --test "tests/*.test.js"`
 - Single test: `node --test --test-name-pattern="locks only" "tests/*.test.js"`
 
-Tests cover `deck.js` (parse, serialize, `themeFor`) and `game.js`; `math.js` and `symbols.js`
-are exercised through them. The DOM modules are checked by hand in a browser.
+Tests cover `deck.js` (parse, serialize, `themeFor`), `game.js`, and OpenMoji coverage of the
+themes; `math.js` and `symbols.js` are exercised through them. The DOM modules are checked by hand in a browser.
 `tests/load.js` runs the browser scripts in a shared `vm` context; wrap values from it in
 `plain()` before `deepStrictEqual`, since VM-realm arrays fail cross-realm prototype checks.
 
 ## Architecture
 
 Each file in `js/` is a classic script exposing one global IIFE module. No ES modules, so
-**load order matters**: `math.js` → `symbols.js` → `renderer.js` → `deck.js` → `pdf.js` →
+**load order matters**: `math.js` → `symbols.js` → `openmoji.js` → `renderer.js` → `deck.js` → `pdf.js` →
 `game.js` → `stats.js` → `play.js` → `app.js` (last: it initializes `SpotItPlay` and routes).
 
 - `SpotItMath` (`math.js`): builds the finite projective plane PG(2,n) for prime n. Points
@@ -34,9 +34,14 @@ Each file in `js/` is a classic script exposing one global IIFE module. No ES mo
 - `SpotItSymbols` (`symbols.js`): emoji themes. `emojiArray()` dedupes glyphs and drops
   code points <= 255. `mixed` is the union of all themes and is built at load time. A theme
   must hold at least n²+n+1 glyphs to be usable at order n.
+- `SpotItOpenMoji` (`openmoji.js`): generated, do not edit. A `Map` from glyph to OpenMoji SVG
+  markup (72×72 viewBox, ids stripped, allowlisted elements only), currently Animals only.
+  Regenerate with `node scripts/build-openmoji.js <theme> [...]` (pinned to openmoji@17.0.0).
+  The artwork is CC BY-SA 4.0: keep the credit in the panel and under the last PDF card.
 - `SpotItRenderer` (`renderer.js`): builds one SVG per card (fixed `CARD_SIZE` viewBox) with a
   shape clip path and a layout engine (`ring`, `grid`, or Poisson-disk `random`, shown in the UI
-  as "Scatter"). Symbols are SVG `<text>` emoji, not images.
+  as "Scatter"). A symbol is a cloned inline `<svg>` of its OpenMoji art (scaled by `ART_SCALE`),
+  or SVG `<text>` emoji when the glyph has no art.
 - `SpotItPDF` (`pdf.js`): rasterizes each SVG to a JPEG via canvas (`RASTER_SCALE`), then
   places images on jsPDF pages. Rasterization is deliberate: vector SVG-to-PDF breaks emoji.
 - `SpotItDeck` (`deck.js`): `DEFAULTS`, URL `parse()`/`serialize()`, `themeFor()` (Mixed
