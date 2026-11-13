@@ -2,7 +2,10 @@
 
 A premium single-page application for generating custom **Spot It** (also known as **Dobble**) game cards. Built with pure mathematics and modern web technologies.
 
-![alt text](/media/preview.png)
+| Light | Dark |
+| :---: | :---: |
+| ![Deck designer, light theme](media/designer-light.png) | ![Deck designer, dark theme](media/designer-dark.png) |
+| ![The Tower game board, light theme](media/game-light.png) | ![The Tower game board, dark theme](media/game-dark.png) |
 
 ## 🧬 The Mathematics
 
