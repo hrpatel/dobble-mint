@@ -6,8 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Dobble Mint is a static, dependency-free single page (`index.html`) that designs Spot It (Dobble)
 cards, exports them to PDF, and plays the game with them. There is no build step,
-package manager, or linter. The only external runtime dependency is jsPDF, loaded from a CDN
-`<script>` tag (with SRI) in `index.html`. Published via GitHub Pages at
+package manager, or linter. External runtime dependencies are jsPDF, loaded from a CDN
+`<script>` tag (with SRI) in `index.html`, and Google Fonts, imported in `css/style.css`. Published via GitHub Pages at
 https://hrpatel.github.io/dobble-mint/.
 
 ## Commands
@@ -16,8 +16,8 @@ https://hrpatel.github.io/dobble-mint/.
 - Unit tests (Node's built-in runner, no install): `node --test "tests/*.test.js"`
 - Single test: `node --test --test-name-pattern="locks only" "tests/*.test.js"`
 
-Tests cover the DOM-free modules (`math.js`, `symbols.js`, `deck.js` parse/serialize, `game.js`).
-`stats.js` and `play.js` are DOM code and are checked by hand in a browser.
+Tests cover `deck.js` (parse, serialize, `themeFor`) and `game.js`; `math.js` and `symbols.js`
+are exercised through them. The DOM modules are checked by hand in a browser.
 `tests/load.js` runs the browser scripts in a shared `vm` context; wrap values from it in
 `plain()` before `deepStrictEqual`, since VM-realm arrays fail cross-realm prototype checks.
 
@@ -110,4 +110,8 @@ controls, Newsreader (`--font-serif`) for brand, section titles, and card number
 `css/play.css` adds the game layout on top of `style.css` tokens. In the game, the hidden
 symbol halo gets `pointer-events: all` to act as a larger tap target.
 
-Deferred ideas live in `IDEAS.md`.
+## Work tracking
+
+All work (features, bugs, ideas, docs) is tracked as GitHub issues at
+https://github.com/hrpatel/dobble-mint/issues, labeled by type. Check there before starting
+new work, and file an issue instead of leaving notes or TODO files in the repo.

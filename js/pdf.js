@@ -8,7 +8,7 @@ const SpotItPDF = (() => {
   const RASTER_SCALE = 3; // 3x for crisp print quality
 
   /**
-   * Convert an SVG element to a PNG data URL via canvas.
+   * Convert an SVG element to a JPEG data URL via canvas.
    */
   function svgToImage(svgEl) {
     return new Promise((resolve, reject) => {

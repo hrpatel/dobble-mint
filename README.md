@@ -20,7 +20,8 @@ This generator currently supports prime orders $n \in \{2, 3, 5, 7, 11, 13\}$.
 ## ✨ Features
 
 - **Mathematical Precision:** Generates valid incidence structures for various orders.
-- **Symbol Themes:** Choose from curated emoji sets (Animals, Nature, Food, Objects, etc.).
+- **Symbol Themes:** Choose from curated emoji sets (Animals, Nature & Weather, Food & Drink,
+  Objects & Activities, Transport & Travel, Shapes & Symbols), or Mixed for the largest decks.
 - **Card Shapes:** Generate cards as Circles, Squares, Hexagons, or Octagons.
 - **Layout Engines:**
   - **Ring:** Classic Spot It layout with a center symbol.
@@ -31,10 +32,13 @@ This generator currently supports prime orders $n \in \{2, 3, 5, 7, 11, 13\}$.
   - Editable seed for reproducible decks.
 - **Shareable Links:** Every setting and the seed live in the URL, so a link recreates the exact deck.
 - **Find the Match:** Click any two cards to highlight the symbol they share.
-- **Play the Game:** "The Tower" with your deck: a solo time trial with best times, or two players
-  head to head on one phone or tablet laid flat.
+- **Play the Game:** "The Tower" with your deck: a solo time trial with best times, two players
+  head to head on one phone or tablet laid flat, or Pass & Play for 2 to 6 players taking turns
+  on the same deal. Games can be paused, and the results screen shows per-card stats.
 - **Light and Dark Modes:** Follows your system setting, with a manual toggle.
-- **High-Quality PDF Export:** Hardware-accelerated canvas rasterization generates incredibly crisp, print-ready PDFs (with optional bleed marks) while perfectly preserving complex system emojis without bloating file sizes.
+- **Print-Ready PDF Export:** Each card is rasterized to a JPEG at 3x scale, so emoji print
+  exactly as they look on screen. Choose A4 or US Letter, 2 to 4 cards per row, and optional bleed
+  marks.
 
 ## 🚀 Getting Started
 
@@ -51,7 +55,7 @@ node --test "tests/*.test.js"
 The project is built with:
 - **Core:** HTML5, CSS3, Vanilla JavaScript.
 - **PDF Engine:** [jsPDF](https://github.com/parallax/jsPDF) (using high-fidelity canvas rasterization).
-- **Fonts:** Inter (via Google Fonts).
+- **Fonts:** Inter and Newsreader (via Google Fonts).
 
 ## 🛠️ Project Structure
 
@@ -69,9 +73,12 @@ dobble-mint/
 │   ├── pdf.js       # PDF assembly and export
 │   ├── app.js       # Designer UI and state
 │   ├── game.js      # Game rules (no DOM)
+│   ├── stats.js     # Results-screen stats and charts
 │   └── play.js      # Game view UI
 └── tests/           # Node unit tests (node --test)
 ```
+
+Ideas and bugs are tracked in [GitHub issues](https://github.com/hrpatel/dobble-mint/issues).
 
 ## 📝 License
 

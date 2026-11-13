@@ -26,7 +26,7 @@ const SpotItGame = (() => {
   /**
    * Deal a new game.
    * @param {number[][]} cards — deck.cards (symbol indices per card)
-   * @param {'solo'|'duel'} mode
+   * @param {'solo'|'duel'|'pass'} mode
    * @param {function} prng — seeded random source for the deal
    * @param {number} now — start time in ms
    */
