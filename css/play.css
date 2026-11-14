@@ -410,19 +410,9 @@ body.playing {
 }
 
 .leaderboard-row {
-  width: 100%;
   padding: 6px 10px;
-  font: inherit;
   color: var(--ink);
-  background: none;
-  border: 0;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
   font-variant-numeric: tabular-nums;
-}
-
-.leaderboard-row:hover {
-  background: var(--accent-soft);
 }
 
 /* ---------- Stats ---------- */
@@ -431,21 +421,31 @@ body.playing {
   color: var(--ink-soft);
 }
 
-.stats summary {
-  text-align: center;
-  cursor: pointer;
-  font-size: 0.9rem;
-}
-
 .stats-body {
-  margin-top: 10px;
-  padding: 16px;
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+.stat-player {
+  padding: 16px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 16px;
+}
+
+.stat-player h3 {
+  margin-bottom: 12px;
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.stat-player-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .stat-facts {

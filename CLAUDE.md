@@ -24,28 +24,31 @@ themes; `math.js` and `symbols.js` are exercised through them. The DOM modules a
 ## Architecture
 
 Each file in `js/` is a classic script exposing one global IIFE module. No ES modules, so
-**load order matters**: `math.js` → `symbols.js` → `openmoji.js` → `renderer.js` → `deck.js` → `pdf.js` →
+**load order matters**: `math.js` → `openmoji.js` → `symbols.js` → `renderer.js` → `deck.js` → `pdf.js` →
 `game.js` → `stats.js` → `play.js` → `app.js` (last: it initializes `SpotItPlay` and routes).
 
 - `SpotItMath` (`math.js`): builds the finite projective plane PG(2,n) for prime n. Points
   become symbols and lines become cards, so any two cards share exactly one symbol. Cards are
   arrays of symbol indices. Also provides `verify()` and the seeded `makePRNG()` (mulberry32).
   Only prime orders work; prime powers (4, 8, 9) would need GF(p^k) arithmetic.
-- `SpotItSymbols` (`symbols.js`): emoji themes. `emojiArray()` dedupes glyphs and drops
-  code points <= 255. `mixed` is the union of all themes and is built at load time. A theme
-  must hold at least n²+n+1 glyphs to be usable at order n.
-- `SpotItOpenMoji` (`openmoji.js`): generated, do not edit. A `Map` from glyph to OpenMoji SVG
-  markup (72×72 viewBox, ids stripped, allowlisted elements only), currently Animals only.
-  Regenerate with `node scripts/build-openmoji.js <theme> [...]` (pinned to openmoji@17.0.0).
-  The artwork is CC BY-SA 4.0: keep the credit in the panel and under the last PDF card.
+- `SpotItOpenMoji` and `SpotItOpenMojiThemes` (`openmoji.js`): generated, do not edit. The
+  themes are five OpenMoji groups (Animals & Nature, Flags, Food & Drink, Symbols, Objects,
+  skin-tone variants excluded) as glyph lists, plus a `Map` from glyph to OpenMoji SVG markup
+  (72×72 viewBox, ids stripped, allowlisted elements only). Theme groups are defined in
+  `scripts/build-openmoji.js`; regenerate with `node scripts/build-openmoji.js` (pinned to
+  openmoji@17.0.0). The artwork is CC BY-SA 4.0: keep the credit in the panel and under the
+  last PDF card.
+- `SpotItSymbols` (`symbols.js`): builds themes from `SpotItOpenMojiThemes` and picks shuffled
+  symbols. A theme must hold at least n²+n+1 glyphs to be usable at order n, so Food & Drink
+  (131) is too small for order 11 (133).
 - `SpotItRenderer` (`renderer.js`): builds one SVG per card (fixed `CARD_SIZE` viewBox) with a
   shape clip path and a layout engine (`ring`, `grid`, or Poisson-disk `random`, shown in the UI
   as "Scatter"). A symbol is a cloned inline `<svg>` of its OpenMoji art (scaled by `ART_SCALE`),
-  or SVG `<text>` emoji when the glyph has no art.
+  or SVG `<text>` emoji when the glyph has no art (never true for the built-in themes).
 - `SpotItPDF` (`pdf.js`): rasterizes each SVG to a JPEG via canvas (`RASTER_SCALE`), then
   places images on jsPDF pages. Rasterization is deliberate: vector SVG-to-PDF breaks emoji.
-- `SpotItDeck` (`deck.js`): `DEFAULTS`, URL `parse()`/`serialize()`, `themeFor()` (Mixed
-  fallback), and `build(settings)`, which picks symbols, shuffles the deck, and renders every
+- `SpotItDeck` (`deck.js`): `DEFAULTS`, URL `parse()`/`serialize()`, `themeFor()` (falls
+  back to the first theme big enough), and `build(settings)`, which picks symbols, shuffles the deck, and renders every
   card SVG from one PRNG.
 - `SpotItApp` (`app.js`): designer UI. Holds a single `state` object, binds controls, and
   debounces `regenerate()` (200 ms), which calls `SpotItDeck.build()` and fills the grid and
@@ -57,17 +60,18 @@ Each file in `js/` is a classic script exposing one global IIFE module. No ES mo
   is always odd. `pause()`/`resume()` exclude paused time from `summary()` and shift duel
   lockouts; `claim()` returns `paused` meanwhile. Every claim lands in `game.log` (timestamp
   in play time), and `summary().stats` (lazy) derives per-card times, fastest/slowest, and
-  wrong taps. A card's time includes the solo penalty for its wrong taps. `histogram()` and
-  `leaderboard()` are pure helpers.
-- `SpotItStats` (`stats.js`): renders `summary().stats` as facts plus two SVG bar charts
-  (time per card, spread of times) into the results screen's `<details>`.
+  wrong taps. `summary().playerStats` gives the same per player. A card's time includes the solo
+  penalty for its wrong taps. `histogram()` and `leaderboard()` are pure helpers.
+- `SpotItStats` (`stats.js`): renders titled stats blocks (facts plus two SVG bar charts: time
+  per card, spread of times) into the results screen, always visible. One block per player in
+  duel and Pass & Play, fastest first.
 - `SpotItPlay` (`play.js`): game view. `app.js` passes a host (`getDeck`, `setOrder`, `exit`);
   the game clones the designer's card SVGs (renaming `clip-N` to `play-clip-N`, since a
   duplicate id would resolve to the hidden designer copy), moves clones between slots, maps
   `pointerdown` on a symbol's halo to `claim()`, pauses behind an opaque overlay (also when the
   tab is hidden), runs Pass & Play (a roster of 2-6, a hand-off screen before each turn, the
-  same deal every turn from one seed drawn from the deal PRNG, then a leaderboard whose rows
-  switch the stats shown; the board lays out as solo), and stores solo best times in `localStorage`
+  same deal every turn from one seed drawn from the deal PRNG, then a leaderboard with every player's
+  stats below it, ranked; the board lays out as solo), and stores solo best times in `localStorage`
   (`dm-best-<cards>`). Two-player is offered only on touch devices; the top seat is rotated
   180° for a device lying flat between players.
 
@@ -94,7 +98,7 @@ All settings plus the seed are mirrored into the URL hash (`#order=7&theme=food&
 each key and ignores bad values; `syncControls()` pushes `state` into the DOM on load and on
 `hashchange`. Parsing and serializing live in `SpotItDeck`, so a new setting needs a rule in
 `parse()`, a key in `serialize()`, and a `syncControls()` line. The URL stores the user's
-preferred theme, not the Mixed fallback. `writeUrlState()` keeps `history.state` and appends
+preferred theme, not the fallback. `writeUrlState()` keeps `history.state` and appends
 `view=play` while the game is open.
 
 ### Reproducibility

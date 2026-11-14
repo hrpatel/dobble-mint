@@ -28,10 +28,10 @@ const SpotItDeck = (() => {
     return order * order + order + 1;
   }
 
-  /** `theme` if it has enough symbols for `order`, otherwise the Mixed pool. */
+  /** `theme` if it has enough symbols for `order`, otherwise the first theme that does. */
   function themeFor(theme, order) {
-    const t = SpotItSymbols.getThemes().find(x => x.key === theme);
-    return t && t.count >= symbolsNeeded(order) ? theme : 'mixed';
+    const fits = SpotItSymbols.getThemes().filter(t => t.count >= symbolsNeeded(order));
+    return fits.some(t => t.key === theme) ? theme : fits[0].key;
   }
 
   /** Valid settings found in a URL hash; invalid or missing keys are omitted. */
@@ -85,7 +85,7 @@ const SpotItDeck = (() => {
     const symbols = SpotItSymbols.getSymbols(s.theme, rawDeck.numSymbols, prng);
 
     if (symbols.length < rawDeck.numSymbols) {
-      throw new Error(`Theme "${s.theme}" only has ${symbols.length} symbols, but ${rawDeck.numSymbols} are needed for order ${s.order}. Try "Mixed" theme.`);
+      throw new Error(`Theme "${s.theme}" only has ${symbols.length} symbols, but ${rawDeck.numSymbols} are needed for order ${s.order}.`);
     }
 
     const deck = SpotItMath.shuffleDeck(rawDeck, prng);

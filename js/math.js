@@ -1,12 +1,12 @@
 /**
  * math.js — Finite Projective Plane for Spot It card generation.
- * Supports prime orders: 2, 3, 5, 7, 11, 13
+ * Supports prime orders: 2, 3, 5, 7, 11
  * Each card is a line in PG(2,n); each symbol is a point.
  * Any two cards share exactly one symbol.
  */
 
 const SpotItMath = (() => {
-  const SUPPORTED_ORDERS = [2, 3, 5, 7, 11, 13];
+  const SUPPORTED_ORDERS = [2, 3, 5, 7, 11];
 
   function isPrime(n) {
     if (n < 2) return false;

@@ -15,7 +15,7 @@ The "magic" behind Spot It is based on **Finite Projective Planes**.
 - By the axioms of projective geometry, **any two lines intersect at exactly one point**.
 - This translates to: **Any two cards share exactly one symbol in common.**
 
-This generator currently supports prime orders $n \in \{2, 3, 5, 7, 11, 13\}$. 
+This generator currently supports prime orders $n \in \{2, 3, 5, 7, 11\}$. 
 - **Total Cards:** $n^2 + n + 1$
 - **Symbols per Card:** $n + 1$
 - **Total Unique Symbols:** $n^2 + n + 1$
@@ -23,8 +23,9 @@ This generator currently supports prime orders $n \in \{2, 3, 5, 7, 11, 13\}$.
 ## ✨ Features
 
 - **Mathematical Precision:** Generates valid incidence structures for various orders.
-- **Symbol Themes:** Choose from curated emoji sets (Animals, Nature & Weather, Food & Drink,
-  Objects & Activities, Transport & Travel, Shapes & Symbols), or Mixed for the largest decks.
+- **Symbol Themes:** Choose from five OpenMoji sets: Animals & Nature (160 symbols), Flags (270),
+  Food & Drink (131), Symbols (224), and Objects (266). All but Food & Drink can fill the largest
+  deck.
 - **Card Shapes:** Generate cards as Circles, Squares, Hexagons, or Octagons.
 - **Layout Engines:**
   - **Ring:** Classic Spot It layout with a center symbol.
@@ -70,8 +71,8 @@ dobble-mint/
 │   └── play.css     # Game layout
 ├── js/
 │   ├── math.js      # Projective plane construction engine
-│   ├── symbols.js   # Unicode/Emoji pool management
-│   ├── openmoji.js  # Generated OpenMoji symbol artwork (CC BY-SA 4.0)
+│   ├── openmoji.js  # Generated OpenMoji themes and artwork (CC BY-SA 4.0)
+│   ├── symbols.js   # Theme pool management
 │   ├── renderer.js  # SVG card rendering logic
 │   ├── deck.js      # Shared deck settings, URL format, and deck building
 │   ├── pdf.js       # PDF assembly and export
