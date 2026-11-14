@@ -39,13 +39,17 @@
       </div>
 
       <div class="topbar-actions">
-        <button class="btn btn-ghost" id="copy-link-btn" title="Copy a link to this exact deck">Copy link</button>
-        <button class="btn btn-ghost" id="match-btn" aria-pressed="false"
-          title="Click two cards to reveal their shared symbol">Find the match</button>
-        <button class="btn btn-icon" id="color-scheme-btn" title="Toggle dark mode"
-          aria-label="Toggle dark mode">☾</button>
-        <button class="btn btn-ghost" id="play-btn" title="Play a game with this deck">Play ▶</button>
+        <details class="menu" id="more-menu">
+          <summary class="btn btn-icon" title="More actions" aria-label="More actions">⋯</summary>
+          <div class="menu-list">
+            <button class="menu-item" id="copy-link-btn"
+              title="Copy a link to this exact deck">Copy link</button>
+          </div>
+        </details>
+        <button class="btn btn-primary" id="play-btn" title="Play a game with this deck">Play ▶</button>
         <button class="btn btn-primary" id="generate-pdf-btn">Export PDF</button>
+        <button class="btn btn-icon topbar-theme" id="color-scheme-btn" title="Toggle dark mode"
+          aria-label="Toggle dark mode">☾</button>
       </div>
     </header>
 
@@ -137,6 +141,10 @@
     <!-- ===== DECK ===== -->
     <main class="main">
       <div id="error-msg" class="error-msg hidden" role="alert"></div>
+      <div class="deck-tools">
+        <button class="btn btn-ghost" id="match-btn" aria-pressed="false"
+          title="Click two cards to reveal their shared symbol">Find the match</button>
+      </div>
       <p id="match-hint" class="match-hint hidden" aria-live="polite"></p>
       <div id="card-grid"></div>
     </main>
