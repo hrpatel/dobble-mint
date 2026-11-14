@@ -124,3 +124,9 @@ symbol halo gets `pointer-events: all` to act as a larger tap target.
 All work (features, bugs, ideas, docs) is tracked as GitHub issues at
 https://github.com/hrpatel/dobble-mint/issues, labeled by type. Check there before starting
 new work, and file an issue instead of leaving notes or TODO files in the repo.
+
+## GitHub access
+
+Use the `gh` CLI for every GitHub operation (issues, PRs, labels, releases, repo views, API calls)
+instead of raw `git` plumbing or the web UI. `gh` is authenticated over HTTPS, so do not rely on
+SSH keys. Local-only work (`git add`, `git commit`, `git diff`, `git log`) stays in `git`.
