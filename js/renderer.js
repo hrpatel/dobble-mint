@@ -8,8 +8,6 @@ const SpotItRenderer = (() => {
   const CARD_SIZE = 300; // viewBox dimension
   const CENTER = CARD_SIZE / 2;
   const RADIUS = CARD_SIZE / 2 - 10; // inset for padding
-  // Paper face and Pine outline in both color schemes; the outline is 2.5% of the card width.
-  const CARD_FACE = { fill: '#FFFCF5', stroke: '#0F3D33', 'stroke-width': CARD_SIZE * 0.025 };
 
   /** Create SVG element helper */
   function el(tag, attrs = {}) {
@@ -52,13 +50,13 @@ const SpotItRenderer = (() => {
       case 'circle':
         return el('circle', {
           cx: CENTER, cy: CENTER, r: RADIUS,
-          ...CARD_FACE,
+          fill: 'white', stroke: '#23463c', 'stroke-width': 3,
         });
       case 'square':
         return el('rect', {
           x: CENTER - RADIUS, y: CENTER - RADIUS,
           width: RADIUS * 2, height: RADIUS * 2, rx: 16, ry: 16,
-          ...CARD_FACE,
+          fill: 'white', stroke: '#23463c', 'stroke-width': 3,
         });
       case 'hexagon':
       case 'octagon': {
@@ -70,7 +68,7 @@ const SpotItRenderer = (() => {
         }
         return el('polygon', {
           points: pts.join(' '),
-          ...CARD_FACE,
+          fill: 'white', stroke: '#23463c', 'stroke-width': 3,
         });
       }
     }
