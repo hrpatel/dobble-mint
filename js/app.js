@@ -141,7 +141,9 @@ const SpotItApp = (() => {
 
     document.getElementById('shuffle-btn').addEventListener('click', () => {
       state.seed = SpotItDeck.newSeed();
-      seedInput.value = state.seed;
+      state.sizeVariance = Math.floor(Math.random() * 26);
+      state.maxAngle = Math.floor(Math.random() * 19) * 10;
+      syncControls();
       scheduleUpdate();
     });
 
@@ -170,45 +172,44 @@ const SpotItApp = (() => {
       document.getElementById('panel').scrollTo({ top: 0, behavior: 'smooth' });
     });
 
+    // Mobile: deck selectors and settings panel collapse behind the settings button
+    const settingsBtn = document.getElementById('settings-btn');
+    settingsBtn.addEventListener('click', () => {
+      const open = document.getElementById('designer-view').classList.toggle('settings-open');
+      settingsBtn.setAttribute('aria-expanded', String(open));
+    });
+
     // Copy link
-    const copyBtn = document.getElementById('copy-link-btn');
-    copyBtn.addEventListener('click', async () => {
+    const toast = document.getElementById('toast');
+    let toastTimer;
+    const showToast = msg => {
+      toast.textContent = msg;
+      toast.classList.remove('hidden');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.add('hidden'), 1800);
+    };
+    document.getElementById('copy-link-btn').addEventListener('click', async () => {
       writeUrlState();
       try {
         await navigator.clipboard.writeText(location.href);
-        copyBtn.textContent = 'Copied';
+        showToast('Link copied');
       } catch {
-        copyBtn.textContent = 'Copy failed';
+        showToast('Copy failed');
       }
-      setTimeout(() => {
-        copyBtn.textContent = 'Copy link';
-        moreMenu.open = false;
-      }, 1500);
-    });
-
-    const moreMenu = document.getElementById('more-menu');
-    document.addEventListener('click', e => {
-      if (!moreMenu.contains(e.target)) moreMenu.open = false;
-    });
-    document.addEventListener('keydown', e => {
-      if (e.key === 'Escape') moreMenu.open = false;
     });
 
     // Color scheme
     const schemeBtn = document.getElementById('color-scheme-btn');
-    const syncSchemeIcon = () => {
-      schemeBtn.textContent = document.documentElement.dataset.theme === 'dark' ? '☀' : '☾';
-    };
-    syncSchemeIcon();
     schemeBtn.addEventListener('click', () => {
       const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
       document.documentElement.dataset.theme = next;
       localStorage.setItem('dm-theme', next);
-      syncSchemeIcon();
     });
 
     // Find the match
-    document.getElementById('match-btn').addEventListener('click', () => setMatchMode(!matchMode));
+    const matchToggle = document.getElementById('match-toggle');
+    matchToggle.checked = matchMode; // drop any state the browser restored on refresh
+    matchToggle.addEventListener('change', e => setMatchMode(e.target.checked));
     document.getElementById('card-grid').addEventListener('click', e => {
       const wrapper = e.target.closest('.card-wrapper');
       if (matchMode && wrapper) selectCard(+wrapper.dataset.index);
@@ -333,7 +334,7 @@ const SpotItApp = (() => {
   function setMatchMode(on) {
     matchMode = on;
     selected = [];
-    document.getElementById('match-btn').setAttribute('aria-pressed', String(on));
+    document.getElementById('match-toggle').checked = on;
     document.querySelector('.main').classList.toggle('match-mode', on);
     document.querySelectorAll('.card-wrapper').forEach(w => { w.disabled = !on; });
     applySelection();
@@ -358,6 +359,7 @@ const SpotItApp = (() => {
       w.setAttribute('aria-pressed', String(selected.includes(i)));
     });
     document.querySelectorAll('.symbol.is-match').forEach(s => s.classList.remove('is-match'));
+    document.getElementById('card-grid').classList.remove('has-pair');
 
     hint.classList.toggle('hidden', !matchMode);
     if (!matchMode) return;
@@ -372,6 +374,7 @@ const SpotItApp = (() => {
     const [a, b] = selected;
     const shared = deck.cards[a].find(s => deck.cards[b].includes(s));
     const glyph = symbols[shared];
+    document.getElementById('card-grid').classList.add('has-pair');
     for (const i of selected) {
       wrappers[i].classList.add('is-paired');
       wrappers[i].querySelectorAll('.symbol').forEach(s => {

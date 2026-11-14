@@ -213,49 +213,33 @@ a.brand:hover .brand-name {
   margin-left: 8px;
 }
 
-/* Overflow menu: native <details>, closed by app.js on outside click and Escape */
-.menu {
-  position: relative;
-}
-
-.menu > summary {
-  list-style: none;
-}
-
-.menu > summary::-webkit-details-marker {
+.topbar-settings {
   display: none;
 }
 
-.menu-list {
-  position: absolute;
-  top: calc(100% + 6px);
-  right: 0;
-  z-index: 20;
-  min-width: 160px;
-  padding: 4px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  box-shadow: var(--bar);
+.icon {
+  width: 1.1rem;
+  height: 1.1rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
-.menu-item {
-  display: block;
-  width: 100%;
-  padding: 8px 12px;
-  font: inherit;
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: max(24px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 30;
+  padding: 8px 16px;
   font-size: 0.85rem;
   font-weight: 600;
-  text-align: left;
-  color: var(--ink);
-  background: none;
-  border: none;
+  color: var(--accent-ink);
+  background: var(--ink);
   border-radius: var(--radius-sm);
-  cursor: pointer;
-}
-
-.menu-item:hover {
-  background: var(--accent-soft);
+  box-shadow: var(--bar);
 }
 
 /* ---------- Settings panel ---------- */
@@ -275,14 +259,31 @@ a.brand:hover .brand-name {
   scrollbar-width: thin;
 }
 
-.panel-credit {
-  margin-top: auto;
+.page-credit {
+  margin-top: 40px;
+  text-align: center;
   font-size: 0.75rem;
-  color: var(--ink-soft);
+  color: var(--ink-muted);
+  opacity: 0.8;
 }
 
-.panel-credit a {
+.page-credit a {
   color: inherit;
+}
+
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.panel-head .panel-title {
+  margin-bottom: 0;
+}
+
+.panel-title {
+  margin-bottom: 0;
 }
 
 .panel-title {
@@ -608,6 +609,7 @@ input[type="range"]::-moz-range-thumb {
   font: inherit;
   color: inherit;
   cursor: default;
+  transition: opacity var(--ease);
 }
 
 .card-wrapper svg.card {
@@ -646,6 +648,11 @@ input[type="range"]::-moz-range-thumb {
   font-weight: 600;
 }
 
+/* Dim every other card while a pair is revealed */
+.has-pair .card-wrapper:not(.is-paired) {
+  opacity: 0.25;
+}
+
 .card-wrapper.is-paired .symbol {
   opacity: 0.25;
   transition: opacity var(--ease);
@@ -660,11 +667,6 @@ input[type="range"]::-moz-range-thumb {
   fill: none;
   stroke: var(--accent);
   stroke-width: 4;
-}
-
-.deck-tools {
-  display: flex;
-  margin-bottom: 16px;
 }
 
 .match-hint {
@@ -727,10 +729,6 @@ input[type="range"]::-moz-range-thumb {
     min-width: 0;
   }
 
-  .menu-list {
-    right: auto;
-    left: 0;
-  }
 
   .panel {
     position: static;
@@ -750,6 +748,78 @@ input[type="range"]::-moz-range-thumb {
   #card-grid {
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     gap: 20px 16px;
+  }
+}
+
+/* Phones and tablets: Play and Export stay in the top row; settings collapse behind the button */
+@media (max-width: 1000px), (orientation: landscape) and (max-height: 500px) {
+  .topbar {
+    gap: 8px;
+    padding: 10px 12px;
+  }
+
+  .topbar-actions {
+    order: 2;
+    width: auto;
+    margin-left: auto;
+    gap: 6px;
+  }
+
+  .topbar-actions .btn-primary {
+    flex: none;
+    padding-inline: 12px;
+  }
+
+  .topbar-theme {
+    margin-left: 0;
+  }
+
+  .topbar-settings {
+    display: inline-flex;
+  }
+
+  .topbar-deck,
+  .panel {
+    display: none;
+  }
+
+  .app.settings-open .topbar {
+    position: static;
+  }
+
+  .app.settings-open .topbar-deck {
+    display: flex;
+  }
+
+  .app.settings-open .panel {
+    display: grid;
+  }
+
+}
+
+/* Wide enough for columns: stack Shape over Layout so no column sits half empty */
+@media (min-width: 560px) and (max-width: 1000px),
+  (min-width: 560px) and (orientation: landscape) and (max-height: 500px) {
+  .panel {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-areas:
+      "shape variation print"
+      "layout variation print"
+      "match variation print";
+    gap: 12px 24px;
+    padding: 14px 16px;
+  }
+
+  .panel > :nth-child(1) { grid-area: shape; }
+  .panel > :nth-child(2) { grid-area: layout; }
+  .panel > :nth-child(3) { grid-area: variation; }
+  .panel > :nth-child(4) { grid-area: print; }
+  .panel > :nth-child(5) { grid-area: match; }
+}
+
+@media (max-width: 480px) {
+  .brand-name {
+    display: none;
   }
 }
 

@@ -44,6 +44,7 @@ const SpotItPlay = (() => {
     const d = host.getDeck();
     if (d) $('play-order').value = d.settings.order;
     showMenu();
+    document.body.classList.add('in-play');
     $('play-view').classList.remove('hidden');
   }
 
@@ -52,7 +53,7 @@ const SpotItPlay = (() => {
     stopTimer();
     game = null;
     series = null;
-    document.body.classList.remove('playing');
+    document.body.classList.remove('playing', 'in-play');
     $('play-view').classList.add('hidden');
   }
 

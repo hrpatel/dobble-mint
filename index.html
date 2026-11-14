@@ -17,6 +17,8 @@
 </head>
 
 <body>
+  <div class="toast hidden" id="toast" role="status" aria-live="polite"></div>
+
   <!-- ===== DESIGNER VIEW ===== -->
   <div class="app" id="designer-view">
     <!-- ===== TOP BAR ===== -->
@@ -34,22 +36,19 @@
 
         <label class="visually-hidden" for="theme-select">Symbol theme</label>
         <select id="theme-select"></select>
-
-        <button class="btn btn-icon" id="shuffle-btn" title="Shuffle deck" aria-label="Shuffle deck">⟳</button>
       </div>
 
       <div class="topbar-actions">
-        <details class="menu" id="more-menu">
-          <summary class="btn btn-icon" title="More actions" aria-label="More actions">⋯</summary>
-          <div class="menu-list">
-            <button class="menu-item" id="copy-link-btn"
-              title="Copy a link to this exact deck">Copy link</button>
-          </div>
-        </details>
+        <button class="btn btn-icon topbar-settings" id="settings-btn" title="Deck settings"
+          aria-label="Deck settings" aria-expanded="false" aria-controls="panel"><svg class="icon" viewBox="0 0 24 24"
+            aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg></button>
+        <button class="btn btn-icon" id="copy-link-btn" title="Copy a link to this exact deck"
+          aria-label="Copy link to this deck"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path
+              d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button>
         <button class="btn btn-primary" id="play-btn" title="Play a game with this deck">Play ▶</button>
         <button class="btn btn-primary" id="generate-pdf-btn">Export PDF</button>
         <button class="btn btn-icon topbar-theme" id="color-scheme-btn" title="Toggle dark mode"
-          aria-label="Toggle dark mode">☾</button>
+          aria-label="Toggle dark mode"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg></button>
       </div>
     </header>
 
@@ -91,7 +90,11 @@
       </section>
 
       <section class="panel-section">
-        <h2 class="panel-title">Variation</h2>
+        <div class="panel-head">
+          <h2 class="panel-title">Variation</h2>
+          <button class="btn btn-icon" id="shuffle-btn" title="Shuffle seed, size and spin" aria-label="Shuffle seed, size and spin"><svg class="icon" viewBox="0 0 24 24"
+            aria-hidden="true"><path d="M2 18h1.4c1.3 0 2.5-.6 3.3-1.7l6.1-8.6c.7-1.1 2-1.7 3.3-1.7H22M18 2l4 4-4 4M2 6h1.9c1.5 0 2.9.9 3.6 2.2M22 18h-5.9c-1.3 0-2.6-.7-3.3-1.8l-.5-.8M18 14l4 4-4 4"/></svg></button>
+        </div>
         <div class="slider-row">
           <label for="size-variance">Size</label>
           <input type="range" id="size-variance" min="0" max="25" step="1" value="0">
@@ -134,19 +137,25 @@
         </div>
       </section>
 
-      <p class="panel-credit">Symbol art: <a href="https://openmoji.org" target="_blank"
-          rel="noopener">OpenMoji</a>, CC BY-SA 4.0</p>
+      <section class="panel-section">
+        <h2 class="panel-title">Find the match</h2>
+        <div class="field-row">
+          <label for="match-toggle">Pick two cards to reveal the symbol they share.</label>
+          <label class="switch">
+            <input type="checkbox" id="match-toggle" autocomplete="off">
+            <span class="switch-track"></span>
+          </label>
+        </div>
+      </section>
     </aside>
 
     <!-- ===== DECK ===== -->
     <main class="main">
       <div id="error-msg" class="error-msg hidden" role="alert"></div>
-      <div class="deck-tools">
-        <button class="btn btn-ghost" id="match-btn" aria-pressed="false"
-          title="Click two cards to reveal their shared symbol">Find the match</button>
-      </div>
       <p id="match-hint" class="match-hint hidden" aria-live="polite"></p>
       <div id="card-grid"></div>
+      <p class="page-credit">Symbol art: <a href="https://openmoji.org" target="_blank"
+          rel="noopener">OpenMoji</a>, CC BY-SA 4.0</p>
     </main>
   </div>
 
