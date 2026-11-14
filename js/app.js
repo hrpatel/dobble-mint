@@ -3,7 +3,7 @@
  */
 
 const SpotItApp = (() => {
-  let state = { ...SpotItDeck.DEFAULTS, margin: 5, seed: SpotItDeck.newSeed() };
+  let state = freshState();
 
   let deck = null;
   let symbols = [];
@@ -15,6 +15,16 @@ const SpotItApp = (() => {
   let view = 'designer'; // 'designer' | 'play', mirrored in the hash as view=play
   let designerScroll = { page: 0, panel: 0 };
   const sliderSyncs = {};
+
+  /** Random size (0-25%) and spin (0-180 degrees in steps of 10). */
+  function randomVariation() {
+    return { sizeVariance: Math.floor(Math.random() * 26), maxAngle: Math.floor(Math.random() * 19) * 10 };
+  }
+
+  /** Default settings with a new seed and random variation (a URL hash overrides them). */
+  function freshState() {
+    return { ...SpotItDeck.DEFAULTS, margin: 5, seed: SpotItDeck.newSeed(), ...randomVariation() };
+  }
 
   function init() {
     bindControls();
@@ -141,8 +151,7 @@ const SpotItApp = (() => {
 
     document.getElementById('shuffle-btn').addEventListener('click', () => {
       state.seed = SpotItDeck.newSeed();
-      state.sizeVariance = Math.floor(Math.random() * 26);
-      state.maxAngle = Math.floor(Math.random() * 19) * 10;
+      Object.assign(state, randomVariation());
       syncControls();
       scheduleUpdate();
     });
@@ -177,6 +186,18 @@ const SpotItApp = (() => {
     settingsBtn.addEventListener('click', () => {
       const open = document.getElementById('designer-view').classList.toggle('settings-open');
       settingsBtn.setAttribute('aria-expanded', String(open));
+    });
+
+    // Reset: defaults with a fresh seed and variation, and a bare URL
+    document.getElementById('reset-btn').addEventListener('click', () => {
+      state = freshState();
+      preferredTheme = state.theme;
+      setMatchMode(false);
+      syncControls();
+      regenerate();
+      // Bare URL until the next change; Copy link rewrites the hash first
+      history.replaceState(history.state, '', location.pathname + location.search);
+      showToast('Reset to defaults');
     });
 
     // Copy link
@@ -389,7 +410,7 @@ const SpotItApp = (() => {
   async function handleGeneratePDF() {
     const btn = document.getElementById('generate-pdf-btn');
     btn.disabled = true;
-    btn.textContent = 'Exporting…';
+    btn.textContent = 'Printing…';
 
     try {
       await SpotItPDF.generatePDF(cardSvgs, {
@@ -403,7 +424,7 @@ const SpotItApp = (() => {
       showError('PDF generation failed: ' + e.message);
     } finally {
       btn.disabled = false;
-      btn.textContent = 'Export PDF';
+      btn.textContent = 'Print Cards';
     }
   }
 

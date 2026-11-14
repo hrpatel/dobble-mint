@@ -213,7 +213,7 @@ a.brand:hover .brand-name {
   margin-left: 8px;
 }
 
-.topbar-settings {
+.btn.topbar-settings {
   display: none;
 }
 
@@ -774,7 +774,7 @@ input[type="range"]::-moz-range-thumb {
     margin-left: 0;
   }
 
-  .topbar-settings {
+  .btn.topbar-settings {
     display: inline-flex;
   }
 
