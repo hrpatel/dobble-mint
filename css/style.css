@@ -209,6 +209,55 @@ a.brand:hover .brand-name {
   margin-left: auto;
 }
 
+.topbar-theme {
+  margin-left: 8px;
+}
+
+/* Overflow menu: native <details>, closed by app.js on outside click and Escape */
+.menu {
+  position: relative;
+}
+
+.menu > summary {
+  list-style: none;
+}
+
+.menu > summary::-webkit-details-marker {
+  display: none;
+}
+
+.menu-list {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 20;
+  min-width: 160px;
+  padding: 4px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--bar);
+}
+
+.menu-item {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: left;
+  color: var(--ink);
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.menu-item:hover {
+  background: var(--accent-soft);
+}
+
 /* ---------- Settings panel ---------- */
 .panel {
   grid-area: panel;
@@ -613,6 +662,11 @@ input[type="range"]::-moz-range-thumb {
   stroke-width: 4;
 }
 
+.deck-tools {
+  display: flex;
+  margin-bottom: 16px;
+}
+
 .match-hint {
   margin-bottom: 20px;
   padding: 10px 14px;
@@ -636,7 +690,7 @@ input[type="range"]::-moz-range-thumb {
 }
 
 /* ---------- Responsive ---------- */
-@media (max-width: 900px) {
+@media (max-width: 1000px) {
   .app {
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: auto auto 1fr;
@@ -668,10 +722,14 @@ input[type="range"]::-moz-range-thumb {
   }
 
   .topbar-deck select,
-  .topbar-actions .btn-ghost,
   .topbar-actions .btn-primary {
     flex: 1;
     min-width: 0;
+  }
+
+  .menu-list {
+    right: auto;
+    left: 0;
   }
 
   .panel {
@@ -692,19 +750,6 @@ input[type="range"]::-moz-range-thumb {
   #card-grid {
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     gap: 20px 16px;
-  }
-}
-
-/* Phones: two rows of actions so labels never overflow their buttons */
-@media (max-width: 600px) {
-  .topbar-actions {
-    display: grid;
-    grid-template-columns: 1fr 1fr auto;
-    gap: 8px;
-  }
-
-  .topbar-actions .btn-primary {
-    grid-column: span 2;
   }
 }
 
