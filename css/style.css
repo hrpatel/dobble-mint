@@ -224,6 +224,16 @@ a.brand:hover .brand-name {
   scrollbar-width: thin;
 }
 
+.panel-credit {
+  margin-top: auto;
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+}
+
+.panel-credit a {
+  color: inherit;
+}
+
 .panel-title {
   font-family: var(--font-serif);
   font-size: 1.05rem;

@@ -96,9 +96,10 @@ const SpotItGame = (() => {
 
   /**
    * Per-card timing from the claim log. A card's time runs from the previous win (or the start)
-   * to its win, plus the solo penalty for each wrong tap along the way.
+   * to its win, plus the solo penalty for each wrong tap along the way. With `player`, keeps
+   * only the cards and wrong taps of that player.
    */
-  function stats(game) {
+  function stats(game, player = null) {
     const cards = [];
     let prevT = 0;
     let wrong = 0;
@@ -110,13 +111,15 @@ const SpotItGame = (() => {
       prevT = e.t;
       wrong = 0;
     }
-    const byTime = [...cards].sort((a, b) => a.ms - b.ms);
+    const mine = player === null ? cards : cards.filter(c => c.player === player);
+    const taps = game.log.filter(e => e.result === 'wrong' && (player === null || e.player === player));
+    const byTime = [...mine].sort((a, b) => a.ms - b.ms);
     return {
-      cards,
-      wrongTaps: game.log.filter(e => e.result === 'wrong').length,
+      cards: mine,
+      wrongTaps: taps.length,
       fastest: byTime[0] ?? null,
       slowest: byTime.at(-1) ?? null,
-      averageMs: cards.length ? cards.reduce((sum, c) => sum + c.ms, 0) / cards.length : 0,
+      averageMs: mine.length ? mine.reduce((sum, c) => sum + c.ms, 0) / mine.length : 0,
     };
   }
 
@@ -154,6 +157,7 @@ const SpotItGame = (() => {
       mistakes: game.players.map(p => p.mistakes),
       winner,
       get stats() { return stats(game); }, // lazy: the HUD calls summary() every frame
+      get playerStats() { return game.players.map((_, i) => stats(game, i)); },
     };
   }
 

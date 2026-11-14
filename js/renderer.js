@@ -200,6 +200,38 @@ const SpotItRenderer = (() => {
     return positions;
   }
 
+  // OpenMoji drawings leave padding inside their 72×72 box; scale up to match emoji text size.
+  const ART_SCALE = 1.25;
+  const artTemplates = new Map(); // glyph -> parsed <svg>, cloned per use
+
+  /** OpenMoji artwork for a glyph when available, otherwise the platform emoji as text. */
+  function symbolArt(glyph, size) {
+    const markup = SpotItOpenMoji.get(glyph);
+    if (!markup) {
+      const text = el('text', {
+        x: 0, y: 0,
+        'font-size': Math.round(size),
+        'text-anchor': 'middle',
+        'dominant-baseline': 'central',
+        'pointer-events': 'none'
+      });
+      text.textContent = glyph;
+      return text;
+    }
+    if (!artTemplates.has(glyph)) {
+      const t = el('svg', { viewBox: '0 0 72 72', 'pointer-events': 'none' });
+      t.innerHTML = markup;
+      artTemplates.set(glyph, t);
+    }
+    const box = Math.round(size * ART_SCALE);
+    const art = artTemplates.get(glyph).cloneNode(true);
+    art.setAttribute('x', -box / 2);
+    art.setAttribute('y', -box / 2);
+    art.setAttribute('width', box);
+    art.setAttribute('height', box);
+    return art;
+  }
+
   /**
    * Render a single card as an SVG element.
    * @param {string[]} symbols — the emoji glyphs for this card
@@ -266,15 +298,7 @@ const SpotItRenderer = (() => {
         class: 'symbol-halo', r: Math.round(finalSize * 0.7), visibility: 'hidden',
       }));
 
-      const text = el('text', {
-        x: 0, y: 0,
-        'font-size': Math.round(finalSize),
-        'text-anchor': 'middle',
-        'dominant-baseline': 'central',
-        'pointer-events': 'none'
-      });
-      text.textContent = symbols[i];
-      symbolG.appendChild(text);
+      symbolG.appendChild(symbolArt(symbols[i], finalSize));
       g.appendChild(symbolG);
     }
 

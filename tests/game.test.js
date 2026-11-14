@@ -234,3 +234,26 @@ test('leaderboard ranks by lowest total time, ties share a rank', () => {
   ]);
   assert.deepEqual(plain(rows.map(r => [r.rank, r.name])), [[1, 'Bo'], [2, 'Ana'], [2, 'Cy'], [4, 'Di']]);
 });
+
+test('playerStats split a duel by player, with each player\'s own wrong taps', () => {
+  const game = newGame('duel', { order: 3 });
+  SpotItGame.claim(game, 1, target(game, 1), 400);
+  SpotItGame.claim(game, 0, wrong(game, 0), 500); // locked out until 1500
+  SpotItGame.claim(game, 0, target(game, 0), 1600);
+  const [p0, p1] = SpotItGame.summary(game, 1600).playerStats;
+  assert.deepEqual(plain(p0.cards.map(c => c.ms)), [1200]);
+  assert.deepEqual(plain(p1.cards.map(c => c.ms)), [400]);
+  assert.equal(p0.wrongTaps, 1);
+  assert.equal(p1.wrongTaps, 0);
+  assert.equal(p1.fastest.ms, 400);
+  assert.equal(p0.averageMs, 1200);
+});
+
+test('playerStats is empty for a player who won nothing', () => {
+  const game = newGame('duel', { order: 3 });
+  SpotItGame.claim(game, 0, target(game, 0), 400);
+  const [, p1] = SpotItGame.summary(game, 400).playerStats;
+  assert.deepEqual(plain(p1.cards), []);
+  assert.equal(p1.fastest, null);
+  assert.equal(p1.averageMs, 0);
+});

@@ -253,12 +253,8 @@ const SpotItPlay = (() => {
     list.className = 'leaderboard';
     rows.forEach(r => {
       const li = document.createElement('li');
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'leaderboard-row';
-      btn.textContent = `${r.rank}. ${r.name} · ${formatTime(r.totalMs)}`;
-      btn.addEventListener('click', () => showStats(r.stats, `${r.name}'s stats`));
-      li.appendChild(btn);
+      li.className = 'leaderboard-row';
+      li.textContent = `${r.rank}. ${r.name} · ${formatTime(r.totalMs)}`;
       list.appendChild(li);
     });
     const top = rows.filter(r => r.rank === 1);
@@ -266,14 +262,14 @@ const SpotItPlay = (() => {
     fillResult($('result-0'), `${top.map(r => r.name).join(' & ')} ${verb}`, []);
     $('result-0').appendChild(list);
     $('results').dataset.mode = 'solo';
-    showStats(rows[0].stats, `${rows[0].name}'s stats`);
+    showStats(rows.map(r => ({ title: `${r.rank}. ${r.name}`, stats: r.stats })));
     $('results').classList.remove('hidden');
   }
 
-  function showStats(stats, title) {
-    $('stats-summary').textContent = title;
-    SpotItStats.render($('stats-body'), stats);
-    $('stats').classList.toggle('hidden', !stats.cards.length);
+  /** Show one stats block per entry, in the order given (fastest first for several players). */
+  function showStats(entries) {
+    SpotItStats.render($('stats-body'), entries);
+    $('stats').classList.toggle('hidden', !entries.some(e => e.stats.cards.length));
   }
 
   // ---------- Layout ----------
@@ -455,7 +451,15 @@ const SpotItPlay = (() => {
         ]);
       });
     }
-    showStats(s.stats, 'Stats');
+    if (mode === 'solo') {
+      showStats([{ title: 'Stats', stats: s.stats }]);
+    } else {
+      // Fastest average card time first; a player who won nothing goes last
+      const speed = e => (e.stats.cards.length ? e.stats.averageMs : Infinity);
+      showStats(s.playerStats
+        .map((stats, i) => ({ title: `Player ${i + 1}`, stats }))
+        .sort((a, b) => speed(a) - speed(b)));
+    }
     results.classList.remove('hidden');
   }
 

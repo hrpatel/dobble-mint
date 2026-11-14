@@ -1,6 +1,6 @@
 /**
  * stats.js — Results-screen stats: per-card times, time distribution, fastest/slowest, wrong taps.
- * Takes the `stats` object from SpotItGame.summary(); touches only the element it is given.
+ * Takes `stats` objects from SpotItGame.summary(); touches only the element it is given.
  */
 
 const SpotItStats = (() => {
@@ -70,8 +70,8 @@ const SpotItStats = (() => {
     return dl;
   }
 
-  /** Fill `el` with the stats for one finished game. */
-  function render(el, stats) {
+  /** Fill `el` with the stats for one player. */
+  function renderOne(el, stats) {
     const times = stats.cards.map(c => c.ms);
     if (!times.length) { el.replaceChildren(); return; }
     const min = Math.min(...times);
@@ -92,6 +92,26 @@ const SpotItStats = (() => {
       section('Time per card', perCard, 'first', 'last'),
       section('Spread of times', spread, seconds(min), seconds(max)),
     );
+  }
+
+  /**
+   * Fill `el` with one titled block per entry, in the order given. Entries without cards
+   * (a player who won nothing) are skipped.
+   * @param {HTMLElement} el
+   * @param {{ title: string, stats: object }[]} entries
+   */
+  function render(el, entries) {
+    el.replaceChildren(...entries.filter(e => e.stats.cards.length).map(({ title, stats }) => {
+      const block = document.createElement('section');
+      block.className = 'stat-player';
+      const heading = document.createElement('h3');
+      heading.textContent = title;
+      const body = document.createElement('div');
+      body.className = 'stat-player-body';
+      renderOne(body, stats);
+      block.append(heading, body);
+      return block;
+    }));
   }
 
   return { render };
