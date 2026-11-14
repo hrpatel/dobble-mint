@@ -111,14 +111,10 @@ cards. Preserve that call order when changing the renderer.
 
 ## Styling
 
-`css/style.css` holds the layout and light and dark tokens on `:root` and
-`:root[data-theme="dark"]`. `css/mint-theme.css` loads last ("Mint Candy Tabletop": thick Pine
-outlines, solid offset shadows). It defines `--dm-*` tokens, remaps the legacy tokens (`--bg`,
-`--ink`, `--accent`, fonts) to them, and overrides components with `html[data-theme]` selectors.
-An inline script in `index.html` sets `data-theme` before first paint from `localStorage`
-(`dm-theme`) or `prefers-color-scheme`. Fonts: Fredoka for headings, buttons, and numbers; Nunito
-for body text. Card faces are Paper with a Pine outline in both schemes (`CARD_FACE` in
-`renderer.js`).
+`css/style.css` uses a "tabletop" design (Modern Boho palette) with light and dark tokens on `:root`
+and `:root[data-theme="dark"]`. An inline script in `index.html` sets `data-theme` before first
+paint from `localStorage` (`dm-theme`) or `prefers-color-scheme`. Fonts: Inter (`--font-sans`) for
+controls, Newsreader (`--font-serif`) for brand, section titles, and card numbers.
 
 `css/play.css` adds the game layout on top of `style.css` tokens. In the game, the hidden
 symbol halo gets `pointer-events: all` to act as a larger tap target.

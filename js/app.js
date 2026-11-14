@@ -180,7 +180,18 @@ const SpotItApp = (() => {
       } catch {
         copyBtn.textContent = 'Copy failed';
       }
-      setTimeout(() => { copyBtn.textContent = 'Copy link'; }, 1500);
+      setTimeout(() => {
+        copyBtn.textContent = 'Copy link';
+        moreMenu.open = false;
+      }, 1500);
+    });
+
+    const moreMenu = document.getElementById('more-menu');
+    document.addEventListener('click', e => {
+      if (!moreMenu.contains(e.target)) moreMenu.open = false;
+    });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') moreMenu.open = false;
     });
 
     // Color scheme

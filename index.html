@@ -14,8 +14,6 @@
   </script>
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/play.css">
-  <link rel="stylesheet" href="css/mint-theme.css">
-  <link rel="icon" href="media/favicon.svg" type="image/svg+xml">
 </head>
 
 <body>
@@ -24,7 +22,9 @@
     <!-- ===== TOP BAR ===== -->
     <header class="topbar">
       <a class="brand" href="./" id="brand-link" title="Back to top">
-        <img class="brand-mark" src="media/logo-mark.svg" alt="">
+        <svg class="brand-mark" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8.5"
+            fill="none" stroke="currentColor" stroke-width="2" /><circle cx="10" cy="10" r="4.5"
+            fill="currentColor" /></svg>
         <span class="brand-name">Dobble Mint</span>
       </a>
 
@@ -39,13 +39,17 @@
       </div>
 
       <div class="topbar-actions">
-        <button class="btn btn-ghost" id="copy-link-btn" title="Copy a link to this exact deck">Copy link</button>
-        <button class="btn btn-ghost" id="match-btn" aria-pressed="false"
-          title="Click two cards to reveal their shared symbol">Find the match</button>
-        <button class="btn btn-icon" id="color-scheme-btn" title="Toggle dark mode"
-          aria-label="Toggle dark mode">☾</button>
-        <button class="btn btn-ghost" id="play-btn" title="Play a game with this deck">Play ▶</button>
+        <details class="menu" id="more-menu">
+          <summary class="btn btn-icon" title="More actions" aria-label="More actions">⋯</summary>
+          <div class="menu-list">
+            <button class="menu-item" id="copy-link-btn"
+              title="Copy a link to this exact deck">Copy link</button>
+          </div>
+        </details>
+        <button class="btn btn-primary" id="play-btn" title="Play a game with this deck">Play ▶</button>
         <button class="btn btn-primary" id="generate-pdf-btn">Export PDF</button>
+        <button class="btn btn-icon topbar-theme" id="color-scheme-btn" title="Toggle dark mode"
+          aria-label="Toggle dark mode">☾</button>
       </div>
     </header>
 
@@ -137,6 +141,10 @@
     <!-- ===== DECK ===== -->
     <main class="main">
       <div id="error-msg" class="error-msg hidden" role="alert"></div>
+      <div class="deck-tools">
+        <button class="btn btn-ghost" id="match-btn" aria-pressed="false"
+          title="Click two cards to reveal their shared symbol">Find the match</button>
+      </div>
       <p id="match-hint" class="match-hint hidden" aria-live="polite"></p>
       <div id="card-grid"></div>
     </main>
@@ -148,7 +156,9 @@
     <section id="start-screen" class="start">
       <header class="topbar play-topbar">
         <a class="brand" href="./" id="play-brand-link" title="Back to the designer">
-          <img class="brand-mark" src="media/logo-mark.svg" alt="">
+          <svg class="brand-mark" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8.5"
+              fill="none" stroke="currentColor" stroke-width="2" /><circle cx="10" cy="10" r="4.5"
+              fill="currentColor" /></svg>
           <span class="brand-name">Dobble Mint</span>
         </a>
         <button class="btn btn-icon play-back" id="play-back-btn" title="Back to the designer"
